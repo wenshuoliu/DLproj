@@ -1,0 +1,6 @@
+*/*.pbs
+*/*.pbs~
+*/*.py~
+output/
+__pycache__/
+*/.ipynb_checkpoints/
