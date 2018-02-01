@@ -14,10 +14,10 @@ import pickle
 path = "/nfs/turbo/intmed-bnallamo-turbo/wsliu/Data/UC_colonoscopy/"
 model_path = path + 'models/'
 
-batch_size=64
+batch_size=32
 
 train_datagen = ImageDataGenerator( 
-        rotation_range=90,
+        rotation_range=180,
         width_shift_range=0.2,
         height_shift_range=0.2,
         shear_range=0.2,
@@ -43,20 +43,33 @@ validation_generator = test_datagen.flow_from_directory(
         class_mode='categorical')
 
 model = Sequential()
-model.add(Conv2D(32, (3, 3), input_shape=(256, 320, 3), activation='relu'))
+model.add(Conv2D(32, (3, 3), input_shape=(256, 320, 3), padding='same', activation='relu'))
+model.add(Conv2D(32, (3, 3), padding='same', activation='relu'))
+model.add(BatchNormalization())
 model.add(MaxPooling2D((2, 2), strides=(2,2)))
 
-model.add(Conv2D(64, (3, 3), activation='relu'))
+model.add(Conv2D(32, (3, 3), padding='same', activation='relu'))
+model.add(Conv2D(32, (3, 3), padding='same', activation='relu'))
+model.add(BatchNormalization())
 model.add(MaxPooling2D((2, 2), strides=(2,2)))
 
-model.add(Conv2D(128, (3, 3), activation='relu'))
+model.add(Conv2D(64, (3, 3), padding='same', activation='relu'))
+model.add(Conv2D(64, (3, 3), padding='same', activation='relu'))
+model.add(BatchNormalization())
 model.add(MaxPooling2D((2, 2), strides=(2,2)))
 
-model.add(Conv2D(256, (3, 3), activation='relu'))
+model.add(Conv2D(128, (3, 3), padding='same', activation='relu'))
+model.add(Conv2D(128, (3, 3), padding='same', activation='relu'))
+model.add(BatchNormalization())
+model.add(MaxPooling2D((2,2), strides=(2,2)))
+
+model.add(Conv2D(128, (3, 3), padding='same', activation='relu'))
+model.add(Conv2D(128, (3, 3), padding='same', activation='relu'))
+model.add(BatchNormalization())
 model.add(MaxPooling2D((2,2), strides=(2,2)))
 
 model.add(Flatten())  
-model.add(Dense(512))
+model.add(Dense(256))
 model.add(Activation('relu'))
 model.add(Dropout(0.5))
 model.add(Dense(2))
@@ -67,9 +80,9 @@ model.compile(loss='categorical_crossentropy',
               optimizer=adam,
               metrics=['accuracy'])
 
-checkpointer = ModelCheckpoint(filepath=model_path+'splitp_znz0124.h5', verbose=0, save_best_only=True, save_weights_only=True)
-reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.3, patience=5, min_lr=1.e-7)
-earlystop = EarlyStopping(monitor='loss', patience=20)
+checkpointer = ModelCheckpoint(filepath=model_path+'splitp_znz0201.h5', verbose=0, save_best_only=True, save_weights_only=True)
+reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.3, patience=10, min_lr=1.e-7)
+earlystop = EarlyStopping(monitor='loss', patience=30)
 
 history = model.fit_generator(
             train_generator,
@@ -80,7 +93,7 @@ history = model.fit_generator(
             callbacks = [checkpointer, reduce_lr, earlystop],
             verbose=2);
 
-model.save_weights(model_path+'splitp_znz0124f.h5')
+model.save_weights(model_path+'splitp_znz0201.h5')
 
-with open('output/splitp_znz0124.pkl', 'wb') as f:
+with open('output/splitp_znz0201.pkl', 'wb') as f:
     pickle.dump(history.history, f, -1)
