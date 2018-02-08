@@ -4,6 +4,7 @@ from keras import backend as K
 from keras.models import Sequential
 from keras.layers.core import Dense, Activation, Dropout, Lambda, Flatten
 from keras.layers.convolutional import Conv2D, MaxPooling2D
+from keras.layers.normalization import BatchNormalization
 from keras.optimizers import SGD, RMSprop, Adam
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import multi_gpu_model
@@ -30,13 +31,13 @@ train_datagen = ImageDataGenerator(
 test_datagen = ImageDataGenerator(rescale=1./255)
 
 train_generator = train_datagen.flow_from_directory(
-        path+'zero_nzero/train/',  # this is the target directory
+        path+'zero_nzero/01_23/train/',  # this is the target directory
         target_size=(256, 320),  
         batch_size=batch_size,
         class_mode='categorical')
 
 validation_generator = test_datagen.flow_from_directory(
-        path+'zero_nzero/validation/',
+        path+'zero_nzero/01_23/validation/',
         target_size=(256, 320),
         batch_size=batch_size,
         shuffle=False,
@@ -80,7 +81,7 @@ model.compile(loss='categorical_crossentropy',
               optimizer=adam,
               metrics=['accuracy'])
 
-checkpointer = ModelCheckpoint(filepath=model_path+'splitp_znz0201.h5', verbose=0, save_best_only=True, save_weights_only=True)
+checkpointer = ModelCheckpoint(filepath=model_path+'splitp_01_23_0202.h5', verbose=0, save_best_only=True, save_weights_only=True)
 reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.3, patience=10, min_lr=1.e-7)
 earlystop = EarlyStopping(monitor='loss', patience=30)
 
@@ -93,7 +94,7 @@ history = model.fit_generator(
             callbacks = [checkpointer, reduce_lr, earlystop],
             verbose=2);
 
-model.save_weights(model_path+'splitp_znz0201.h5')
+model.save_weights(model_path+'splitp_01_23_0202f.h5')
 
-with open('output/splitp_znz0201.pkl', 'wb') as f:
+with open('output/splitp_01_23_0202.pkl', 'wb') as f:
     pickle.dump(history.history, f, -1)
