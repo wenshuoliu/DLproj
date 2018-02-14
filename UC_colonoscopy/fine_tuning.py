@@ -60,12 +60,13 @@ for layer in model.layers[249:]:
 model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='categorical_crossentropy', metrics=['accuracy'])
 
 checkpointer = ModelCheckpoint(filepath=model_path+'inceptionv3_ft0208.h5', verbose=0, save_best_only=True, save_weights_only=True)
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.3, patience=20, min_lr=1.e-8)
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=20, min_lr=1.e-8)
 earlystop = EarlyStopping(patience=50)
 class_weights = {0:(5895/4467.), 1:(5895./828), 2:(5895./389), 3:(5895./211)}
 
-history = model.fit_generator(train_gen, steps_per_epoch=train_gen.n // batch_size, epochs=200, validation_data=test_gen, 
-                    validation_steps=test_gen.n // batch_size, callbacks=[checkpointer, reduce_lr, earlystop], 
+history = model.fit_generator(train_generator, steps_per_epoch=train_generator.n // batch_size, epochs=300, 
+                              validation_data=validation_generator, 
+                    validation_steps=validation_generator.n // batch_size, callbacks=[checkpointer, reduce_lr, earlystop], 
                              class_weight=class_weights)
 
 with open('output/inceptionv3_ft0208.pkl', 'wb') as f:
