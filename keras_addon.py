@@ -7,8 +7,10 @@ class FrameIterator(Iterator):
     from a pandas dataframe
     # Arguments
         directory: Path to the directory to read images from.
-            Each subdirectory in this directory will be
-            considered to contain images from all classes. 
+            This directory will be considered to contain images from all classes. 
+        dataframe: the pandas dataframe that contains the file_names and labels
+        file_names: the column name of the dataframe for the file names in the directory
+        labels: the columns of the dataframe for the labels
         image_data_generator: Instance of `ImageDataGenerator`
             to use for random transformations and normalization.
         target_size: tuple of integers, dimensions to resize input images to.
@@ -31,6 +33,7 @@ class FrameIterator(Iterator):
                  target_size=(256, 256), color_mode='rgb',
                  batch_size=32, shuffle=True, seed=None,
                  data_format=None,
+                 follow_links=False,
                  subset=None,
                  interpolation='nearest'):
         if data_format is None:
@@ -60,10 +63,6 @@ class FrameIterator(Iterator):
                              '; expected one of "categorical", '
                              '"binary", "sparse", "input"'
                              ' or None.')
-        self.class_mode = class_mode
-        self.save_to_dir = save_to_dir
-        self.save_prefix = save_prefix
-        self.save_format = save_format
         self.interpolation = interpolation
 
         if subset is not None:
@@ -84,6 +83,7 @@ class FrameIterator(Iterator):
         # first, count the number of samples and classes
         self.samples = 0
 
+        '''
         if not classes:
             classes = []
             for subdir in sorted(os.listdir(directory)):
@@ -91,17 +91,10 @@ class FrameIterator(Iterator):
                     classes.append(subdir)
         self.num_classes = len(classes)
         self.class_indices = dict(zip(classes, range(len(classes))))
+        '''
+        self.samples = _count_valid_files_in_directory(self.directory, white_list_formats, split, follow_links)
 
-        pool = multiprocessing.pool.ThreadPool()
-        function_partial = partial(_count_valid_files_in_directory,
-                                   white_list_formats=white_list_formats,
-                                   follow_links=follow_links,
-                                   split=split)
-        self.samples = sum(pool.map(function_partial,
-                                    (os.path.join(directory, subdir)
-                                     for subdir in classes)))
-
-        print('Found %d images belonging to %d classes.' % (self.samples, self.num_classes))
+        print('Found %d images.' % (self.samples))
 
         # second, build an index of the images in the different class subfolders
         results = []
