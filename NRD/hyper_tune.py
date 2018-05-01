@@ -11,11 +11,6 @@ from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from keras.utils import to_categorical
 from keras.optimizers import Adam
 
-module_path = os.path.abspath(os.path.join('..'))
-if module_path not in sys.path:
-    sys.path.append(module_path)
-from utils import plot_roc
-
 path = '/nfs/turbo/intmed-bnallamo-turbo/wsliu/Data/NRD/'
 model_path = path + 'models/'
 if not os.path.exists(model_path): 
@@ -42,8 +37,12 @@ DX_dims = [5, 10, 20, 50]
 hosp_dims = [1, 3, 5, 10]
 
 n_sample = 100
-parameters = tuple(zip(np.random.choice(depths, n_sample), np.random.choice(widths, n_sample),
+parameters = list(zip(np.random.choice(depths, n_sample), np.random.choice(widths, n_sample),
                        np.random.choice(DX_dims, n_sample), np.random.choice(hosp_dims, n_sample)))
+parameters = [p for p in parameters if parameters.count(p)==1]
+param_tried = pd.read_csv('./hyper_tune.csv')
+param_tried = param_tried[['depth', 'width', 'DX_dim', 'hosp_dim']].values
+param_tried = [tuple(p) for p in list(param_tried)]
 
 def sc_block(input_tensor, width):
     '''Short-cut block'''
@@ -85,11 +84,8 @@ def model_build(depth, width, DX_dim, hosp_dim):
     x = Dense(width, activation='relu')(x)
     prediction = Dense(2, activation='softmax')(x)
     model = Model(inputs=[input_demo, input_DX1, input_DX, input_hosp], outputs=prediction)
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     return model
-
-checkpointer = ModelCheckpoint(filepath=model_path+'ami_icd9_temp.h5', verbose=0, save_best_only=True, save_weights_only=True)
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=1.e-8)
-earlystop = EarlyStopping(monitor='val_loss', patience=20)
 
 class_weight = {0:(y_train.shape[0]/sum(y_train[:, 0])), 1:(y_train.shape[0]/sum(y_train[:, 1]))}
 adam = Adam(lr=0.0002)
@@ -97,17 +93,21 @@ adam = Adam(lr=0.0002)
 #with open('./hyper_tune.csv', 'a') as f:
 #    f.write('depth,width,DX_dim,hosp_dim,auc\n')
 for param in parameters:
-    print("Training with parameters: ", *param)
-    model = model_build(*param)
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-    hist = model.fit([demo_mat[:N_train, :], DX1_mat[:N_train, :], DX_mat[:N_train, :], hosp_array[:N_train]], y_train, 
-                 batch_size=256, epochs=100, callbacks=[checkpointer, reduce_lr, earlystop], class_weight=class_weight, 
-                 validation_data=[[demo_mat[N_train:, :], DX1_mat[N_train:, :], DX_mat[N_train:, :], hosp_array[N_train:]], y_test], 
-                verbose=2)
-    model.load_weights(model_path+'ami_icd9_temp.h5')
-    y_pred = model.predict([demo_mat[N_train:, :], DX1_mat[N_train:, :], DX_mat[N_train:, :], hosp_array[N_train:]], batch_size=256)
-    fpr, tpr, _ = roc_curve(y_test[:, 0], y_pred[:, 0])
-    roc_auc = auc(fpr, tpr)
-    with open('./hyper_tune.csv', 'a') as f:
-        f.write('{0},{1},{2},{3},{4:.3f}\n'.format(*param,roc_auc))
+    if not param in param_tried: 
+        print("Training with parameters: ", *param)
+        model = model_build(*param)
+        checkpointer = ModelCheckpoint(filepath=model_path+'ami_icd9_{}_{}_{}_{}.h5'.format(*param), verbose=0, save_best_only=True, save_weights_only=True)
+        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=1.e-8)
+        earlystop = EarlyStopping(monitor='val_loss', patience=20)
+        hist = model.fit([demo_mat[:N_train, :], DX1_mat[:N_train, :], DX_mat[:N_train, :], hosp_array[:N_train]], y_train, 
+                         batch_size=256, epochs=100, callbacks=[checkpointer, reduce_lr, earlystop], class_weight=class_weight, 
+                         validation_data=[[demo_mat[N_train:, :], DX1_mat[N_train:, :], DX_mat[N_train:, :], hosp_array[N_train:]], y_test], 
+                         verbose=2)
+        model.load_weights(model_path+'ami_icd9_{}_{}_{}_{}.h5'.format(*param))
+        y_pred = model.predict([demo_mat[N_train:, :], DX1_mat[N_train:, :], DX_mat[N_train:, :], hosp_array[N_train:]], batch_size=256)
+        fpr, tpr, _ = roc_curve(y_test[:, 0], y_pred[:, 0])
+        roc_auc = auc(fpr, tpr)
+        with open('./hyper_tune.csv', 'a') as f:
+            f.write('{0},{1},{2},{3},{4:.3f}\n'.format(*param,roc_auc))
+        del(model)
 

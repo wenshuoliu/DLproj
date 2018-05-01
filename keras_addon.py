@@ -97,8 +97,8 @@ class FrameIterator(Iterator):
         print('Found %d images.' % (self.samples))
 
         # second, build an index of the images in the different class subfolders
-        results = []
-
+        classes, filenames = _list_valid_filenames_in_directory(directory, white_list_formats, split, 
+        
         self.filenames = []
         self.classes = np.zeros((self.samples,), dtype='int32')
         i = 0
