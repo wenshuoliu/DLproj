@@ -5,13 +5,13 @@ from keras.preprocessing.image import _count_valid_files_in_directory
 
 class FrameIterator(Iterator):
     """Iterator capable of reading images from a directory on disk, and labels 
-    from a pandas dataframe
+    from a pandas DataFrame
     # Arguments
         directory: Path to the directory to read images from.
             This directory will be considered to contain images from all classes. 
         dataframe: the pandas dataframe that contains the file_names and labels
-        file_names: the column name of the dataframe for the file names in the directory
-        labels: the columns of the dataframe for the labels
+        file_names: str, the column name of the dataframe for the file names in the directory
+        labels: list of strs, the columns of the dataframe for the labels
         image_data_generator: Instance of `ImageDataGenerator`
             to use for random transformations and normalization.
         target_size: tuple of integers, dimensions to resize input images to.
@@ -42,9 +42,9 @@ class FrameIterator(Iterator):
         self.directory = directory
         self.image_data_generator = image_data_generator
         self.target_size = tuple(target_size)
-        if color_mode not in {'rgb', 'grayscale'}:
+        if color_mode not in {'rgb', 'grayscale', '3d'}:
             raise ValueError('Invalid color mode:', color_mode,
-                             '; expected "rgb" or "grayscale".')
+                             '; expected "rgb", "grayscale" or "3d".')
         self.color_mode = color_mode
         self.data_format = data_format
         if self.color_mode == 'rgb':
@@ -52,45 +52,29 @@ class FrameIterator(Iterator):
                 self.image_shape = self.target_size + (3,)
             else:
                 self.image_shape = (3,) + self.target_size
+        elif self.color_mode == 'grayscale':
+            if self.data_format == 'channels_last':
+                self.image_shape = self.target_size + (1,)
+            else:
+                self.image_shape = (1,) + self.target_size
         else:
             if self.data_format == 'channels_last':
                 self.image_shape = self.target_size + (1,)
             else:
                 self.image_shape = (1,) + self.target_size
-        '''
-        self.classes = classes
-        if class_mode not in {'categorical', 'binary', 'sparse',
-                              'input', None}:
-            raise ValueError('Invalid class_mode:', class_mode,
-                             '; expected one of "categorical", '
-                             '"binary", "sparse", "input"'
-                             ' or None.')
-        '''
+
         self.save_to_dir = save_to_dir
         self.save_prefix = save_prefix
         self.save_format = save_format
         self.interpolation = interpolation
-        '''
-        if subset is not None:
-            validation_split = self.image_data_generator._validation_split
-            if subset == 'validation':
-                split = (0, validation_split)
-            elif subset == 'training':
-                split = (validation_split, 1)
-            else:
-                raise ValueError('Invalid subset name: ', subset,
-                                 '; expected "training" or "validation"')
-        else:
-            split = None
-        self.subset = subset
-        '''
+
         white_list_formats = {'png', 'jpg', 'jpeg', 'bmp', 'ppm', 'tif', 'tiff', 'npy'}
 
         # first, count the number of samples and classes
         self.samples = 0
         self.samples = _count_valid_files_in_directory(self.directory, white_list_formats, follow_links)
 
-        print('Found %d images.' % (self.samples))
+        print('Found %d images in the directory.' % (self.samples))
 
         filenames = [f for f in os.listdir(directory) if not os.path.isdir(os.path.join(directory, f))]
        
@@ -110,39 +94,59 @@ class FrameIterator(Iterator):
         self.filenames = np.array(filenames)
         self.labels = sub_df.loc[filenames,:]
         
+        self.samples = len(self.filenames)
+        print('Using {} images to generate mini-batches.'.format(self.samples))
+        
         super(FrameIterator, self).__init__(self.samples, batch_size, shuffle, seed)
 
     def _get_batches_of_transformed_samples(self, index_array):
+        '''This function generate batches in the form: batch_x is np array; batch_y is a dict
+        {label_name: np array, ...} So it matches the fit_generator function of a multi-outcome model'''
         batch_x = np.zeros((len(index_array),) + self.image_shape, dtype=K.floatx())
-        grayscale = self.color_mode == 'grayscale'
-        # build batch of image data
-        for i, j in enumerate(index_array):
-            fname = self.filenames[j]
-            img = load_img(os.path.join(self.directory, fname),
-                           grayscale=grayscale,
-                           target_size=self.target_size,
-                           interpolation=self.interpolation)
-            x = img_to_array(img, data_format=self.data_format)
-            x = self.image_data_generator.random_transform(x)
-            x = self.image_data_generator.standardize(x)
-            batch_x[i] = x
-        # optionally save augmented images to disk for debugging purposes
-        if self.save_to_dir:
+        if not self.color_mode == '3d':
+            grayscale = self.color_mode == 'grayscale'
+            # build batch of image data
             for i, j in enumerate(index_array):
-                img = array_to_img(batch_x[i], self.data_format, scale=True)
-                fname = '{prefix}_{index}_{hash}.{format}'.format(prefix=self.save_prefix,
-                                                                  index=j,
-                                                                  hash=np.random.randint(1e7),
-                                                                  format=self.save_format)
-                img.save(os.path.join(self.save_to_dir, fname))
+                fname = self.filenames[j]
+                img = load_img(os.path.join(self.directory, fname),
+                               grayscale=grayscale,
+                               target_size=self.target_size,
+                               interpolation=self.interpolation)
+                x = img_to_array(img, data_format=self.data_format)
+                x = self.image_data_generator.random_transform(x)
+                x = self.image_data_generator.standardize(x)
+                batch_x[i] = x
+        # optionally save augmented images to disk for debugging purposes
+            if self.save_to_dir:
+                for i, j in enumerate(index_array):
+                    img = array_to_img(batch_x[i], self.data_format, scale=True)
+                    fname = '{prefix}_{index}_{hash}.{format}'.format(prefix=self.save_prefix,
+                                                                      index=j,
+                                                                      hash=np.random.randint(1e7),
+                                                                      format=self.save_format)
+                    img.save(os.path.join(self.save_to_dir, fname))
+        else:
+            for i, j in enumerate(index_array):
+                fname = self.filenames[j]
+                x = np.load(os.path.join(self.directory, fname))
+                #x = self.image_data_generator.random_transform(x) ----To be implemented!
+                batch_x[i] = x
+            if self.save_to_dir:
+                for i, j in enumerate(index_array):
+                    x = batch_x[i]
+                    fname = '{prefix}_{index}_{hash}.{format}'.format(prefix=self.save_prefix,
+                                                                      index=j,
+                                                                      hash=np.random.randint(1e7),
+                                                                      format=self.save_format)
+                    np.save(os.path.join(self.save_to_dir,fname), x)
+        
         # build batch of labels
         label_dim = self.labels.shape[1]
         label_names = self.labels.columns
         batch_y = dict()
         for l in label_names:
             batch_y[l] = self.labels.loc[self.filenames[index_array], l].values
-            
-        
+                    
         return batch_x, batch_y
 
     def next(self):
@@ -160,7 +164,7 @@ class FrameIterator(Iterator):
 
 class ImageFrameGenerator(ImageDataGenerator):
     """Extension of ImageDataGenerator to generate batches with labels from 
-    a pandas DataFrame. 
+    a pandas DataFrame. The argumennts are the same as ImageDataGenerator. 
     # Arguments
         featurewise_center: set input mean to 0 over the dataset.
         samplewise_center: set each sample mean to 0.

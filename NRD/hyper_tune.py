@@ -31,8 +31,8 @@ N_train = y_train.shape[0]
 #print(demo_mat.shape, DX1_mat.shape, DX_mat.shape, hosp_array.shape, y_train.shape, y_test.shape, n_DX_cat, n_DX1_cat, 
 #      n_hosp_cat, N_train)
 
-depths = [1, 3, 5, 10, 20, 50]
-widths = [64, 128, 256, 512, 1024]
+depths = [1, 3, 5, 10, 20]
+widths = [64, 128, 256, 512]
 DX_dims = [5, 10, 20, 50]
 hosp_dims = [1, 3, 5, 10]
 lrs = [0.001, 0.0005, 0.0002, 0.0001]
