@@ -129,6 +129,7 @@ class FrameIterator(Iterator):
             for i, j in enumerate(index_array):
                 fname = self.filenames[j]
                 x = np.load(os.path.join(self.directory, fname))
+                x = x.reshape(x.shape+(1,))
                 #x = self.image_data_generator.random_transform(x) ----To be implemented!
                 batch_x[i] = x
             if self.save_to_dir:
