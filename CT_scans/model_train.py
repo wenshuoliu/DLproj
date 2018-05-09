@@ -11,6 +11,7 @@ import tensorflow as tf
 
 import numpy as np
 import pandas as pd
+import pickle
 from sklearn.model_selection import train_test_split
 import os, sys
 module_path = os.path.abspath(os.path.join('..'))
@@ -26,17 +27,28 @@ if not os.path.exists(model_path):
     
 batch_size = 2
 G = 4
+tot_bs = batch_size*G
 
 df = pd.read_excel(path+'K23_Crohn_RadiologyReport_Labels_27MAR2018.xlsx')
 df = df.dropna(subset=['StudyID'])
 df['filename'] = ['s'+str(int(f)) for f in df['StudyID']]
 df = df.drop_duplicates(subset=['filename'])
-trn_df, tst_df = train_test_split(df, test_size=0.2, stratify=df[['CD_Active_AnyLocation', 'Fistula_Any', 'Abscess_any']])
+
+test_size = int(len(df)*0.2/tot_bs)*tot_bs
+train_size = int((len(df)-test_size)/tot_bs)*tot_bs
+
+#trn_df, tst_df = train_test_split(df, test_size=0.2, stratify=df[['CD_Active_AnyLocation', 'Fistula_Any', 'Abscess_any']])
+trn_df, tst_df = train_test_split(df, test_size=test_size, train_size=train_size, stratify=df['Abscess_any'])
 
 gen = ImageFrameGenerator()
-trn_gen = gen.flow_from_frame(path+'ndarray/', trn_df, 'filename', ['CD_Active_AnyLocation', 'Fistula_Any', 'Abscess_any'], 
+#trn_gen = gen.flow_from_frame(path+'ndarray/', trn_df, 'filename', ['CD_Active_AnyLocation', 'Fistula_Any', 'Abscess_any'], 
+#                             target_size=(256, 256, 192), color_mode='3d', batch_size=batch_size*G)
+#tst_gen = gen.flow_from_frame(path+'ndarray/', tst_df, 'filename', ['CD_Active_AnyLocation', 'Fistula_Any', 'Abscess_any'], 
+#                             target_size=(256, 256, 192), color_mode='3d', batch_size=batch_size*G)
+
+trn_gen = gen.flow_from_frame(path+'ndarray/', trn_df, 'filename', ['Abscess_any'], 
                              target_size=(256, 256, 192), color_mode='3d', batch_size=batch_size*G)
-tst_gen = gen.flow_from_frame(path+'ndarray/', tst_df, 'filename', ['CD_Active_AnyLocation', 'Fistula_Any', 'Abscess_any'], 
+tst_gen = gen.flow_from_frame(path+'ndarray/', tst_df, 'filename', ['Abscess_any'], 
                              target_size=(256, 256, 192), color_mode='3d', batch_size=batch_size*G)
 
 from dense3dnet import Dense3DNet
@@ -45,18 +57,26 @@ model = Dense3DNet(blocks, growth_rate=12)
 with tf.device('/cpu:0'):
     base_model = Dense3DNet(blocks, pooling='avg')
     x = base_model.output
-    output_CD = Dense(1, activation='sigmoid', name='CD_Active_AnyLocation')(x)
-    output_fist = Dense(1, activation='sigmoid', name='Fistula_Any')(x)
+    #output_CD = Dense(1, activation='sigmoid', name='CD_Active_AnyLocation')(x)
+    #output_fist = Dense(1, activation='sigmoid', name='Fistula_Any')(x)
     output_absc = Dense(1, activation='sigmoid', name='Abscess_any')(x)
-    model = Model(inputs=base_model.input, outputs=[output_CD, output_fist, output_absc])
+    model = Model(inputs=base_model.input, outputs=output_absc)
 parallel_model = multi_gpu_model(model, gpus=G)
-parallel_model.compile(optimizer='adam', loss={'CD_Active_AnyLocation':'binary_crossentropy', 'Fistula_Any':'binary_crossentropy', 
-                                     'Abscess_any':'binary_crossentropy'}, metrics=['accuracy'], 
-             loss_weights={'CD_Active_AnyLocation':0.4, 'Fistula_Any':0.3, 'Abscess_any':0.3})
 
-checkpointer = ModelCheckpoint(filepath=model_path+'dense121_gr12.h5', verbose=0, save_best_only=True, save_weights_only=True)
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=8, min_lr=1.e-8)
-earlystop = EarlyStopping(monitor='val_loss', patience=15)
+#parallel_model.compile(optimizer='adam', loss={'CD_Active_AnyLocation':'binary_crossentropy', 'Fistula_Any':'binary_crossentropy', 
+#                                     'Abscess_any':'binary_crossentropy'}, metrics=['accuracy'], 
+#             loss_weights={'CD_Active_AnyLocation':0.4, 'Fistula_Any':0.3, 'Abscess_any':0.3})
+
+parallel_model.compile(optimizer='adam', loss={'Abscess_any':'binary_crossentropy'}, metrics=['accuracy'])
+
+checkpointer = ModelCheckpoint(filepath=model_path+'dense121_gr12_absc.h5', verbose=0, save_best_only=True, save_weights_only=True)
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=10, min_lr=1.e-8)
+earlystop = EarlyStopping(monitor='val_loss', patience=20)
 
 hist = parallel_model.fit_generator(trn_gen, steps_per_epoch=trn_gen.n // (batch_size*G), epochs=100, validation_data=tst_gen, 
                     validation_steps=tst_gen.n // (batch_size*G), callbacks=[checkpointer, reduce_lr, earlystop], verbose=2)
+
+model.save_weights(model_path+'dense121_gr12_absc_f.h5')
+
+with open('output/dense121_gr12_absc.pkl', 'wb') as f:
+    pickle.dump(hist, f, -1)

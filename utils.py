@@ -14,17 +14,20 @@ def plot_roc(y_pred, y_true, classes=None):
     fpr = dict()
     tpr = dict()
     roc_auc = dict()
-    for i in range(n_classes):
-        fpr[i], tpr[i], _ = roc_curve(y_true[:, i], y_pred[:, i])
-        roc_auc[i] = auc(fpr[i], tpr[i])
-    colors = cycle(['aqua', 'darkorange', 'cornflowerblue', 'navy'])
     
     if classes is None:
         legends = ['class'+str(j+1) for j in range(n_classes)]
-    elif len(classes == n_classes):
+    elif len(classes) == n_classes:
         legends = classes
     else:
-        print("Number of classes doesn't match labels")
+        raise ValueError("Number of classes doesn't match labels")    
+    
+    for i in range(n_classes):
+        fpr[i], tpr[i], _ = roc_curve(y_true[:, i], y_pred[:, i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
+        
+    colors = cycle(['darkorange', 'cornflowerblue', 'navy', 'aqua'])    
+
     for i, color in zip(range(n_classes), colors):
         plt.plot(fpr[i], tpr[i], color=color,
                  label='ROC curve of {0} (area = {1:0.2f})'
