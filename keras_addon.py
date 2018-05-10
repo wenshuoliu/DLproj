@@ -84,13 +84,18 @@ class FrameIterator(Iterator):
                 if f.lower().endswith('.'+e):
                     ext.add(e)
         if len(ext)>1:
-            print("Image files must have the same extension.")
+            print("Image files must have the same format.")
         ext = ext.pop()
             
         sub_df = dataframe[[file_names]+labels]
+        sub_df.sort_values(file_names)
         sub_df = sub_df.set_index(file_names, drop=True)
-        sub_df.index = [i+'.'+ext for i in sub_df.index]
-        filenames = sorted([fn for fn in filenames if fn in sub_df.index])
+        
+        if not sub_df.index[0].endswith('.'+ext):
+            sub_df.index = [i+'.'+ext for i in sub_df.index]
+            
+        file_set = set(filenames)
+        filenames = [fn for fn in sub_df.index if fn in file_set]
         self.filenames = np.array(filenames)
         self.labels = sub_df.loc[filenames,:]
         
