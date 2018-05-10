@@ -2,6 +2,7 @@
 
 from keras.preprocessing.image import *  
 from keras.preprocessing.image import _count_valid_files_in_directory
+import keras
 
 class FrameIterator(Iterator):
     """Iterator capable of reading images from a directory on disk, and labels 
@@ -71,8 +72,10 @@ class FrameIterator(Iterator):
         white_list_formats = {'png', 'jpg', 'jpeg', 'bmp', 'ppm', 'tif', 'tiff', 'npy'}
 
         # first, count the number of samples and classes
-        self.samples = 0
-        self.samples = _count_valid_files_in_directory(self.directory, white_list_formats, follow_links)
+        if keras.__version__<'2.1.5':
+            self.samples = _count_valid_files_in_directory(self.directory, white_list_formats, follow_links)
+        else:
+            self.samples = _count_valid_files_in_directory(self.directory, white_list_formats, None, follow_links)
 
         print('Found %d images in the directory.' % (self.samples))
 
@@ -88,7 +91,15 @@ class FrameIterator(Iterator):
         ext = ext.pop()
             
         sub_df = dataframe[[file_names]+labels]
+
         sub_df.sort_values(file_names)
+
+        name_freq = sub_df[file_names].value_counts()
+        dup_name = name_freq[name_freq>1].index
+        if len(dup_name)>0:
+            raise ValueError('These filenames appears multiple times:'+str(list(dup_name)))
+            print(dup_name)
+
         sub_df = sub_df.set_index(file_names, drop=True)
         
         if not sub_df.index[0].endswith('.'+ext):
@@ -104,6 +115,9 @@ class FrameIterator(Iterator):
         
         super(FrameIterator, self).__init__(self.samples, batch_size, shuffle, seed)
 
+    def debug(self):
+        return self.filenames, self.labels
+        
     def _get_batches_of_transformed_samples(self, index_array):
         '''This function generate batches in the form: batch_x is np array; batch_y is a dict
         {label_name: np array, ...} So it matches the fit_generator function of a multi-outcome model'''
