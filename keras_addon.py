@@ -127,6 +127,7 @@ class FrameIterator(Iterator):
             # build batch of image data
             for i, j in enumerate(index_array):
                 fname = self.filenames[j]
+                #print(fname)
                 img = load_img(os.path.join(self.directory, fname),
                                grayscale=grayscale,
                                target_size=self.target_size,
