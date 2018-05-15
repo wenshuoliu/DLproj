@@ -44,9 +44,9 @@ val_itr = gen.flow_from_frame(path+'ndarray/', val_df, 'filename', ['CD_Active_A
 
 from dense3dnet import Dense3DNet
 blocks = [6, 12, 24, 16]
-model = Dense3DNet(blocks, growth_rate=12)
+
 with tf.device('/cpu:0'):
-    base_model = Dense3DNet(blocks, pooling='avg')
+    base_model = Dense3DNet(blocks, growth_rate=20, pooling='avg')
     x = base_model.output
     output_CD = Dense(1, activation='sigmoid', name='CD_Active_AnyLocation')(x)
     output_fist = Dense(1, activation='sigmoid', name='Fistula_Any')(x)
@@ -56,18 +56,18 @@ parallel_model = multi_gpu_model(model, gpus=G)
 
 parallel_model.compile(optimizer='adam', loss={'CD_Active_AnyLocation':'binary_crossentropy', 'Fistula_Any':'binary_crossentropy', 
                                      'Abscess_any':'binary_crossentropy'}, metrics=['accuracy'], 
-             loss_weights={'CD_Active_AnyLocation':0.4, 'Fistula_Any':0.3, 'Abscess_any':0.3})
+             loss_weights={'CD_Active_AnyLocation':1., 'Fistula_Any':1., 'Abscess_any':1.})
 
 #parallel_model.compile(optimizer='adam', loss={'Abscess_any':'binary_crossentropy'}, metrics=['accuracy'])
 
-checkpointer = ModelCheckpoint(filepath=model_path+'dense121_gr12_3output0512.h5', verbose=0, save_best_only=True, save_weights_only=True)
+checkpointer = ModelCheckpoint(filepath=model_path+'dense121_gr16_3output0515.h5', verbose=0, save_best_only=True, save_weights_only=True)
 reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.2, patience=5, min_lr=1.e-8)
 earlystop = EarlyStopping(monitor='val_loss', patience=30)
 
 hist = parallel_model.fit_generator(trn_itr, steps_per_epoch=trn_itr.n // (batch_size*G), epochs=200, validation_data=val_itr, 
                     validation_steps=val_itr.n // (batch_size*G), callbacks=[checkpointer, reduce_lr, earlystop], verbose=2)
 
-model.save_weights(model_path+'dense121_gr12_3output0512_f.h5')
+parallel_model.save_weights(model_path+'dense121_gr16_3output0515_f.h5')
 
-with open('output/dense121_gr12_3output0512.pkl', 'wb') as f:
+with open('output/dense121_gr16_3output0515.pkl', 'wb') as f:
     pickle.dump(hist.history, f, -1)
