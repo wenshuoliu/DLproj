@@ -3,6 +3,7 @@
 from keras.preprocessing.image import *  
 from keras.preprocessing.image import _count_valid_files_in_directory
 import keras
+from keras.utils import to_categorical
 
 class FrameIterator(Iterator):
     """Iterator capable of reading images from a directory on disk, and labels 
@@ -32,7 +33,7 @@ class FrameIterator(Iterator):
     """
 
     def __init__(self, directory, dataframe, file_names, labels, image_data_generator,
-                 target_size=(256, 256), color_mode='rgb',
+                 target_size=(256, 256), color_mode='rgb', label_types=None,
                  batch_size=32, shuffle=True, seed=None,
                  data_format=None, save_to_dir=None, save_prefix='', 
                  save_format='png',
@@ -64,6 +65,11 @@ class FrameIterator(Iterator):
             else:
                 self.image_shape = (1,) + self.target_size
 
+        if not label_types is None:
+            if not len(labels)==len(label_types):
+                raise ValueError("Length of label types doesn't match with labels!")
+        
+        self.label_types = label_types
         self.save_to_dir = save_to_dir
         self.save_prefix = save_prefix
         self.save_format = save_format
@@ -90,7 +96,7 @@ class FrameIterator(Iterator):
             print("Image files must have the same format.")
         ext = ext.pop()
             
-        sub_df = dataframe[[file_names]+labels]
+        sub_df = dataframe[[file_names]+labels].copy()
 
         sub_df.sort_values(file_names)
 
@@ -98,15 +104,40 @@ class FrameIterator(Iterator):
         dup_name = name_freq[name_freq>1].index
         if len(dup_name)>0:
             raise ValueError('These filenames appears multiple times:'+str(list(dup_name)))
-            print(dup_name)
+            #print(dup_name)
 
         sub_df = sub_df.set_index(file_names, drop=True)
-        
+        if label_types is None:
+            label_types=['continuous']*len(labels)
+            
+            
+        n_levels = dict()
+        for l, t in zip(labels, label_types):
+            if t=='categorical':
+                sub_df[l] = sub_df[l].astype('category')
+                levels = sub_df[l].cat.categories
+                new_levels = list(range(len(levels)))
+                sub_df[l].cat.categories = new_levels
+                n_levels[l] = len(levels)
+                print("Using", l, "as categorical label, with levels:", dict(zip(new_levels, levels)))
+            else:
+                print("Using", l, "as", t, "label. ")
+                
+        self.n_levels = n_levels
+                
+        #if not label_types is None:
+        #    if 'categorical' in label_types:
+        #        cat_labels = [labels[i] for i, t in enumerate(label_types) if v=='categorical']
+        #for c in cat_labels:
+        #    sub_df[c] = sub_df[c].astype('category')
+        #    sub_df[c].cat.categories = range(len(sub_df[c].cat.categories))
+             
         if not sub_df.index[0].endswith('.'+ext):
             sub_df.index = [i+'.'+ext for i in sub_df.index]
             
         file_set = set(filenames)
         filenames = [fn for fn in sub_df.index if fn in file_set]
+         
         self.filenames = np.array(filenames)
         self.labels = sub_df.loc[filenames,:]
         
@@ -164,9 +195,21 @@ class FrameIterator(Iterator):
         # build batch of labels
         label_dim = self.labels.shape[1]
         label_names = self.labels.columns
+        label_types = self.label_types
+        if label_types is None:
+            label_types = ['continuous']*label_dim
         batch_y = dict()
-        for l in label_names:
-            batch_y[l] = self.labels.loc[self.filenames[index_array], l].values
+        for l, t in zip(label_names, label_types):
+            if not t in {'continuous', 'binary', 'categorical', None}:
+                raise ValueError("Invalide label type:", t, 
+                                 "; Expected label types:'continuous', 'binary', categorical' or None. ")
+            if not t=='categorical':
+                batch_y[l] = self.labels.loc[self.filenames[index_array], l].values.astype(K.floatx())
+            else:
+                y_mat = np.zeros((batch_x.shape[0], self.n_levels[l]), dtype=K.floatx())
+                for i, c in enumerate(self.labels.loc[self.filenames[index_array], l].values):
+                    y_mat[i, c] = 1.
+                batch_y[l] = y_mat
                     
         return batch_x, batch_y
 
@@ -270,14 +313,14 @@ class ImageFrameGenerator(ImageDataGenerator):
         
             
     def flow_from_frame(self, directory, dataframe, file_names, labels,
-                 target_size=(256, 256), color_mode='rgb',
+                 target_size=(256, 256), color_mode='rgb', label_types=None, 
                  batch_size=32, shuffle=True, seed=None,
                  data_format=None, save_to_dir=None, save_prefix='', 
                  save_format='png',
                  follow_links=False,
                  interpolation='nearest'):
         return FrameIterator(directory, dataframe, file_names, labels, self,
-                 target_size=target_size, color_mode=color_mode,
+                 target_size=target_size, color_mode=color_mode, label_types=label_types, 
                  batch_size=batch_size, shuffle=shuffle, seed=seed,
                  data_format=self.data_format, save_to_dir=save_to_dir, save_prefix=save_prefix, 
                  save_format=save_format,

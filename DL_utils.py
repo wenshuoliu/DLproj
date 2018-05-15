@@ -30,7 +30,7 @@ def plot_roc(y_pred, y_true, classes=None):
 
     for i, color in zip(range(n_classes), colors):
         plt.plot(fpr[i], tpr[i], color=color,
-                 label='ROC curve of {0} (area = {1:0.2f})'
+                 label='ROC curve of {0} (area = {1:0.3f})'
                  ''.format(legends[i], roc_auc[i]))
     plt.plot([0, 1], [0, 1], 'k--')
     plt.xlim([0.0, 1.0])
