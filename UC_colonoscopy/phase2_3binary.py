@@ -25,7 +25,7 @@ batch_size=32
 
 labels = pd.read_csv(path+'train_labels.csv')
 
-split = GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=24)
+split = GroupShuffleSplit(n_splits=1, test_size=0.11, random_state=24)
 ind = split.split(labels, groups=labels['SourceReportName'])
 trn_ind, val_ind = next(ind)
 trn_df = labels.loc[trn_ind, ]
@@ -61,9 +61,9 @@ model = Model(inputs=base_model.input, outputs=[output1, output2, output3])
 adam = Adam()
 model.compile(optimizer=adam, loss='binary_crossentropy',metrics=['accuracy'])
 
-checkpointer = ModelCheckpoint(filepath=model_path+'phase2_0511_of.h5', verbose=0, save_best_only=True, save_weights_only=True)
+checkpointer = ModelCheckpoint(filepath=model_path+'phase2_3binary_0515.h5', verbose=0, save_best_only=True, save_weights_only=True)
 reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.3, patience=5, min_lr=1.e-8)
-earlystop = EarlyStopping(monitor='loss', patience=10)
+earlystop = EarlyStopping(monitor='val_loss', patience=30)
 
 #class_weights = {0:(5895/4467.), 1:(5895./828), 2:(5895./389), 3:(5895./211)}
 
@@ -72,7 +72,7 @@ hist = model.fit_generator(train_itr, steps_per_epoch=train_itr.n // batch_size,
                               callbacks=[checkpointer, reduce_lr, earlystop], 
                                 verbose=2)
 
-#model.save_weights(model_path+'phase2_0511_2_f.h5')
+model.save_weights(model_path+'phase2_3binary_0515_f.h5')
 
-with open('output/phase2_0511_of.pkl', 'wb') as f:
+with open('output/phase2_3binary_0515.pkl', 'wb') as f:
     pickle.dump(hist.history, f, -1)
