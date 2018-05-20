@@ -3,7 +3,7 @@
 from keras.preprocessing.image import *  
 from keras.preprocessing.image import _count_valid_files_in_directory
 import keras
-from keras.utils import to_categorical
+#from keras.utils import to_categorical
 
 class FrameIterator(Iterator):
     """Iterator capable of reading images from a directory on disk, and labels 
@@ -327,4 +327,49 @@ class ImageFrameGenerator(ImageDataGenerator):
                  follow_links=follow_links,
                  interpolation=interpolation)
             
+
+class AUCCheckPointer(keras.callbacks.Callback):
+    def __init__(self, filepath, validation_y, validation_x=None, validation_itr=None):
+        self.filepath = filepath
+        self.val_itr = validation_itr
+        self.val_y = validation_y
+        self.val_x = validation_x
+        
+    def on_train_begin(self, logs={}):
+        self.auc_history = []
+        self.best_auc = 0.
+        
+    def on_train_end(self, logs={}):
+        return
+    
+    def on_epoch_begin(self, epoch, logs={}):
+        return
+    
+    def on_epoch_end(self, epoch, logs={}):
+        if self.val_x is None:
+            y_pred = self.model.predict_generator(self.val_itr)
+        else:
+            y_pred = self.model.predict(self.val_x)
+            
+        if len(self.val_y.shape)>1:
+            y_pred = np.concatenate(y_pred, axis=1)
+            aucs = []
+            for i in range(self.val_y.shape[1]):
+                aucs.append(roc_auc_score(self.val_y[:, i], y_pred[:, i]))
+            auc_new = np.mean(aucs)
+        else:
+            auc_new = roc_auc_score(self.val_y, y_pred)
+        print('AUC: {.3f}\n'.format(auc_new))    
+        self.auc_history.append(auc_new)
+        if auc_new>self.best_auc:
+            self.best_auc = auc_new
+            self.model.save_weights(self.filepath, overwrite=True)
+        return
+    
+    def on_batch_begin(self, batch, logs={}):
+        return
+    
+    def on_batch_end(self, batch, logs={}):
+        return 
+    
     
