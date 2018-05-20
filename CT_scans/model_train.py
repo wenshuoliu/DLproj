@@ -46,7 +46,7 @@ from dense3dnet import Dense3DNet
 blocks = [6, 12, 24, 16]
 
 with tf.device('/cpu:0'):
-    base_model = Dense3DNet(blocks, growth_rate=20, pooling='avg')
+    base_model = Dense3DNet(blocks, growth_rate=12, pooling='avg')
     x = base_model.output
     output_CD = Dense(1, activation='sigmoid', name='CD_Active_AnyLocation')(x)
     output_fist = Dense(1, activation='sigmoid', name='Fistula_Any')(x)
@@ -60,14 +60,14 @@ parallel_model.compile(optimizer='adam', loss={'CD_Active_AnyLocation':'binary_c
 
 #parallel_model.compile(optimizer='adam', loss={'Abscess_any':'binary_crossentropy'}, metrics=['accuracy'])
 
-checkpointer = ModelCheckpoint(filepath=model_path+'dense121_gr16_3output0515.h5', verbose=0, save_best_only=True, save_weights_only=True)
-reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.2, patience=5, min_lr=1.e-8)
-earlystop = EarlyStopping(monitor='val_loss', patience=30)
+checkpointer = ModelCheckpoint(filepath=model_path+'dense121_gr12_3output0515.h5', verbose=0, save_best_only=True, save_weights_only=True)
+reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.2, patience=10, min_lr=1.e-8)
+earlystop = EarlyStopping(monitor='val_loss', patience=40)
 
 hist = parallel_model.fit_generator(trn_itr, steps_per_epoch=trn_itr.n // (batch_size*G), epochs=200, validation_data=val_itr, 
                     validation_steps=val_itr.n // (batch_size*G), callbacks=[checkpointer, reduce_lr, earlystop], verbose=2)
 
-parallel_model.save_weights(model_path+'dense121_gr16_3output0515_f.h5')
+parallel_model.save_weights(model_path+'dense121_gr12_3output0515_f.h5')
 
-with open('output/dense121_gr16_3output0515.pkl', 'wb') as f:
+with open('output/dense121_gr12_3output0515.pkl', 'wb') as f:
     pickle.dump(hist.history, f, -1)
