@@ -4,6 +4,7 @@ from keras.preprocessing.image import *
 from keras.preprocessing.image import _count_valid_files_in_directory
 import keras
 #from keras.utils import to_categorical
+from sklearn.metrics import roc_auc_score
 
 class FrameIterator(Iterator):
     """Iterator capable of reading images from a directory on disk, and labels 
@@ -328,15 +329,41 @@ class ImageFrameGenerator(ImageDataGenerator):
                  interpolation=interpolation)
             
 
-class AUCCheckPointer(keras.callbacks.Callback):
+class AUCCheckPoint(keras.callbacks.Callback):
     def __init__(self, filepath, validation_y, validation_x=None, validation_itr=None):
         self.filepath = filepath
         self.val_itr = validation_itr
         self.val_y = validation_y
         self.val_x = validation_x
-        
+                                
     def on_train_begin(self, logs={}):
-        self.auc_history = []
+        #indicator for multi-ouput model
+        if len(self.model.output_names)>1:
+            self.multi_outputs = True
+        else:
+            self.multi_outputs = False
+        #model output mode: could be categorical with 2 classes, usually for adding weights    
+        if self.multi_outputs:
+            if self.model.output_shape[0][1]==1:
+                self.output_mode = 'binary'
+            elif self.model.output_shape[0][1]==2:
+                self.output_mode = 'categorical'
+            else:
+                raise ValueError('The model output must be binary or categorical with 2 classes!')
+        else:
+            if self.model.output_shape[1]==1:
+                self.output_mode = 'binary'
+            elif self.model.output_shape[1]==2:
+                self.output_mode = 'categorical'
+            else:
+                raise ValueError('The model output must be binary or categorical with 2 classes!')
+                
+        if self.multi_outputs:
+            self.auc_history = {}
+            for output in self.model.output_names:
+                self.auc_history[output] = []
+        else:
+            self.auc_history = []
         self.best_auc = 0.
         
     def on_train_end(self, logs={}):
@@ -351,16 +378,25 @@ class AUCCheckPointer(keras.callbacks.Callback):
         else:
             y_pred = self.model.predict(self.val_x)
             
-        if len(self.val_y.shape)>1:
-            y_pred = np.concatenate(y_pred, axis=1)
+        if self.multi_outputs:
+            if self.output_mode == 'binary':
+                y_pred = np.concatenate(y_pred, axis=1)
+            else:
+                y_pred = np.concatenate([y[:, 1] for y in y_pred], axis=1) 
             aucs = []
-            for i in range(self.val_y.shape[1]):
-                aucs.append(roc_auc_score(self.val_y[:, i], y_pred[:, i]))
-            auc_new = np.mean(aucs)
+            for i, output in enumerate(self.model.output_names):
+                auc = roc_auc_score(self.val_y[:, i], y_pred[:, i])
+                self.auc_history[output].append(auc)
+                print('AUC_'+output+': {:.4f}'.format(auc))
+                aucs.append(auc)    
+            auc_new = np.mean(aucs)        
         else:
+            if self.output_mode=='categorical':
+                y_pred = y_pred[:, 1]
             auc_new = roc_auc_score(self.val_y, y_pred)
-        print('AUC: {.3f}\n'.format(auc_new))    
-        self.auc_history.append(auc_new)
+            self.auc_history.append(auc_new)
+            print('AUC: {:.4f}\n'.format(auc_new))    
+ 
         if auc_new>self.best_auc:
             self.best_auc = auc_new
             self.model.save_weights(self.filepath, overwrite=True)
