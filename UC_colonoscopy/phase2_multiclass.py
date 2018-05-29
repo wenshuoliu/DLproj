@@ -24,7 +24,7 @@ data_path = path+'subset/'
 batch_size=32
 
 labels = pd.read_csv(path+'train_labels.csv')
-
+labels = labels.reset_index(drop=True)
 split = GroupShuffleSplit(n_splits=1, test_size=0.11, random_state=24)
 ind = split.split(labels, groups=labels['SourceReportName'])
 trn_ind, val_ind = next(ind)
@@ -41,12 +41,12 @@ train_gen = ImageFrameGenerator(
         vertical_flip=True,
         fill_mode='nearest')
 test_gen = ImageFrameGenerator()
-train_itr = train_gen.flow_from_frame(data_path, trn_df, 'basefile', 
+trn_itr = train_gen.flow_from_frame(data_path, trn_df, 'basefile', 
                                       ['Mayo_score'], label_types=['categorical'],
                                      target_size=(256, 320), batch_size=batch_size)
 val_itr = test_gen.flow_from_frame(data_path, val_df, 'basefile', 
                                    ['Mayo_score'], label_types=['categorical'],
-                                     target_size=(256, 320), batch_size=batch_size)
+                                     target_size=(256, 320), batch_size=batch_size, shuffle=False)
 
 from keras.applications.inception_v3 import InceptionV3
 
@@ -61,19 +61,19 @@ model = Model(inputs=base_model.input, outputs=output)
 adam = Adam()
 model.compile(optimizer=adam, loss='categorical_crossentropy',metrics=['accuracy'])
 
-checkpointer = ModelCheckpoint(filepath=model_path+'phase2_multiclass0515.h5', verbose=0, save_best_only=True, save_weights_only=True)
+checkpointer = ModelCheckpoint(filepath=model_path+'multiclass_valloss_0528.h5', verbose=0, save_best_only=True, save_weights_only=True)
 reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.3, patience=5, min_lr=1.e-8)
 earlystop = EarlyStopping(monitor='val_loss', patience=30)
 
 freq = trn_df['Mayo_score'].value_counts()
 class_weights = {0:(len(trn_df)/freq[0]), 1:(len(trn_df)/freq[1]), 2:(len(trn_df)/freq[2]), 3:(len(trn_df)/freq[3])}
 
-hist = model.fit_generator(train_itr, steps_per_epoch=train_itr.n // batch_size, epochs=200, 
+hist = model.fit_generator(trn_itr, steps_per_epoch=trn_itr.n // batch_size, epochs=200, 
                               validation_data=val_itr, validation_steps=val_itr.n // batch_size, 
                               callbacks=[checkpointer, reduce_lr, earlystop], class_weight = {'Mayo_score':class_weights}, 
                                 verbose=2)
 
-model.save_weights(model_path+'phase2_multiclass0515f.h5')
+model.save_weights(model_path+'multiclass_of_0528.h5')
 
-with open('output/phase2_multiclass0515.pkl', 'wb') as f:
+with open('output/multiclass_0528.pkl', 'wb') as f:
     pickle.dump(hist.history, f, -1)

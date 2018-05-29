@@ -382,14 +382,15 @@ class AUCCheckPoint(keras.callbacks.Callback):
             if self.output_mode == 'binary':
                 y_pred = np.concatenate(y_pred, axis=1)
             else:
-                y_pred = np.concatenate([y[:, 1] for y in y_pred], axis=1) 
+                y_pred = np.concatenate([y[:, 1].reshape((y.shape[0], 1)) for y in y_pred], axis=1) 
             aucs = []
             for i, output in enumerate(self.model.output_names):
                 auc = roc_auc_score(self.val_y[:, i], y_pred[:, i])
                 self.auc_history[output].append(auc)
                 print('AUC_'+output+': {:.4f}'.format(auc))
                 aucs.append(auc)    
-            auc_new = np.mean(aucs)        
+            auc_new = np.mean(aucs)
+            print('Mean AUC: {:.4f}\n'.format(auc_new))
         else:
             if self.output_mode=='categorical':
                 y_pred = y_pred[:, 1]
