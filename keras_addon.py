@@ -5,6 +5,7 @@ from keras.preprocessing.image import _count_valid_files_in_directory
 import keras
 #from keras.utils import to_categorical
 from sklearn.metrics import roc_auc_score
+from scipy.ndimage.interpolation import zoom
 
 class FrameIterator(Iterator):
     """Iterator capable of reading images from a directory on disk, and labels 
@@ -180,8 +181,10 @@ class FrameIterator(Iterator):
         else:
             for i, j in enumerate(index_array):
                 fname = self.filenames[j]
-                x = np.load(os.path.join(self.directory, fname))
-                x = x.reshape(x.shape+(1,))
+                raw_x = np.load(os.path.join(self.directory, fname))
+                ratios = (self.target_size[0]/raw_x.shape[0], self.target_size[1]/raw_x.shape[1], self.target_size[2]/raw_x.shape[2])
+                x = zoom(raw_x, zoom=ratios)
+                x = x.reshape(self.image_shape)
                 #x = self.image_data_generator.random_transform(x) ----To be implemented!
                 batch_x[i] = x
             if self.save_to_dir:
