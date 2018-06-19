@@ -2,7 +2,7 @@
 
 #### PBS preamble
 
-#PBS -N colonoscopy_3binary_cv5
+#PBS -N colonoscopy_3binary_cv10
 
 #PBS -M wsliu@umich.edu
 #PBS -m abe
@@ -24,4 +24,4 @@ if [ -n "$PBS_NODEFILE" ]; then cat $PBS_NODEFILE; fi
 if [ -n "$PBS_O_WORKDIR" ]; then cd $PBS_O_WORKDIR; fi
 
 #  Put your job commands here:
-python phase2_3binary5.py 
+python phase2_3binary10.py 
