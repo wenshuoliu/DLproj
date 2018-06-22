@@ -37,9 +37,9 @@ trn_size = int((len(df)-val_size)/tot_bs)*tot_bs
 trn_df, val_df = train_test_split(df, test_size=val_size, train_size=trn_size, stratify=df[['CD_Active_AnyLocation', 'Fistula_Any', 'Abscess_any']], random_state=24)
 
 gen = ImageFrameGenerator()
-trn_itr = gen.flow_from_frame(path+'ndarray/', trn_df, 'filename', ['CD_Active_AnyLocation', 'Fistula_Any', 'Abscess_any'], 
+trn_itr = gen.flow_from_frame(path+'low_resolution/', trn_df, 'filename', ['CD_Active_AnyLocation', 'Fistula_Any', 'Abscess_any'], 
                              target_size=(224, 224, 128), color_mode='3d', batch_size=batch_size*G, shuffle=True)
-val_itr = gen.flow_from_frame(path+'ndarray/', val_df, 'filename', ['CD_Active_AnyLocation', 'Fistula_Any', 'Abscess_any'], 
+val_itr = gen.flow_from_frame(path+'low_resolution/', val_df, 'filename', ['CD_Active_AnyLocation', 'Fistula_Any', 'Abscess_any'], 
                              target_size=(224, 224, 128), color_mode='3d', batch_size=batch_size*G, shuffle=False)
 
 from dense3dnet import Dense3DNet
@@ -62,7 +62,7 @@ parallel_model.compile(optimizer='adam', loss={'CD_Active_AnyLocation':'binary_c
 
 checkpointer = ModelCheckpoint(filepath=model_path+'dense121_gr12_3output0611.h5', verbose=0, save_best_only=True, save_weights_only=True)
 auccheckpoint = AUCCheckPoint(filepath=model_path+'dense121_gr12_3output_auc0611.h5', validation_y=val_df[['CD_Active_AnyLocation', 'Fistula_Any', 'Abscess_any']].values, validation_itr=val_itr)
-reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.2, patience=5, min_lr=1.e-8)
+reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.2, patience=5, min_lr=1.e-7)
 earlystop = EarlyStopping(monitor='val_loss', patience=30)
 
 hist = parallel_model.fit_generator(trn_itr, steps_per_epoch=trn_itr.n // (batch_size*G), epochs=200, validation_data=val_itr, 
