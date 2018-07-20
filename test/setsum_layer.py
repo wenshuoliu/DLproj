@@ -121,3 +121,34 @@ class SetSum(Layer):
         }
         base_config = super(Dense, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
+    
+class MaskedSum(Layer):
+    """This layer is supposed to follow a Embedding layer. It sums over the non-masked embeddings.
+    The summation is done along the timestep axis. 
+    # Input shape
+        (batch, timestep, feature). The last layer should pass a mask with 
+        dimension (batch, timestep), which is the default output_mask from Embedding(mask_zero=True)
+    # Output shape
+        (batch, feature). Note that the timestep dimension is summed out.
+    """
+    def __init__(self, **kwargs):
+        self.supports_masking = True
+        super(MaskedSum, self).__init__(**kwargs)
+
+    def call(self, inputs, mask=None):
+        assert len(inputs.shape) == 3
+        if mask is not None:
+            mask = K.cast(mask, 'float32')
+            assert len(mask.shape) == 2
+            mask = K.repeat(mask, inputs.shape[-1])
+            mask = K.permute_dimensions(mask, (0, 2, 1))
+            masked = mask*inputs
+            return K.sum(masked, axis=1)
+        else:
+            return K.sum(inputs, axis=1)
+
+    def compute_output_shape(self, input_shape):
+        return (input_shape[0], input_shape[-1])
+
+    def compute_mask(self, input, input_mask=None):
+        return None
