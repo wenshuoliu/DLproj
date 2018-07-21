@@ -2,8 +2,8 @@
 import argparse
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--rare_cutpoint', type=int, default=1)
 parser.add_argument('--sum_layer', type=int, default=0, help='1 is SetSum, 0 is MaskedSum')
+parser.add_argument('--rare_cutpoint', type=int, default=1)
 parser.add_argument('--dx_dim', type=int, default=50)
 parser.add_argument('--hosp_dim', type=int, default=1)
 parser.add_argument('--penalty', type=float, default=0.001)
@@ -29,7 +29,7 @@ import os, sys
 from sklearn.metrics import roc_curve, auc
 from sklearn.model_selection import train_test_split
 
-from keras.layers import Input, Embedding, concatenate, LSTM, CuDNNLSTM, Lambda
+from keras.layers import Input, Embedding, concatenate, LSTM, CuDNNLSTM, Lambda, Reshape
 from keras.models import Model
 from keras.layers.core import Dense, Activation, Dropout
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
@@ -40,12 +40,15 @@ import keras.backend as K
 module_path = '/home/wsliu/Codes/DLproj'
 if module_path not in sys.path:
     sys.path.append(module_path)
+if module_path+'/NRD' not in sys.path:
+    sys.path.append(module_path+'/NRD')
 from DL_utils import plot_roc
 from keras_addon import AUCCheckPoint
 from utils import Mat_reg
 from setsum_layer import SetSum, MaskedSum
 
-path = '/nfs/turbo/umms-awaljee/wsliu/Data/NRD/'
+#path = '/nfs/turbo/umms-awaljee/wsliu/Data/NRD/'
+path = '/nfs/turbo/intmed-bnallamo-turbo/wsliu/Data/NRD/'
 model_path = path + 'models/'
 if not os.path.exists(model_path): 
     os.mkdir(model_path)
@@ -207,7 +210,7 @@ N_trn = len(trn_df)
 N_val = len(val_df)
 all_df = pd.concat([train_df, tst_df])
 
-#### Define the dictionaries of DX, DX1, hospital:
+print("Define the dictionaries of DX, DX1, hospital...")
 N_DX = 29
 DXs = ['DX'+str(n) for n in range(2, N_DX+2)]
 
@@ -245,7 +248,7 @@ hosp_series = all_df['HOSP_NRD'].astype('category')
 hosp_cat = hosp_series.cat.categories
 hosp_dict = dict(zip(hosp_cat, range(len(hosp_cat))))
 
-#### Define the parent matrix
+print("Define the parent matrix...")
 ami_ccs = multi_ccs.loc[multi_ccs.ICD9CM_CODE.isin(DX_cat)]
 ccs_cat = pd.concat([ami_ccs.CCS_LVL1, ami_ccs.CCS_LVL2, ami_ccs.CCS_LVL3, ami_ccs.CCS_LVL4]).astype('category').cat.categories
 all_codes = [DX_cat[-1]]+list(DX_cat[:-1]) + list(ccs_cat[1:])
@@ -280,7 +283,7 @@ for i, c in enumerate(all_codes):
         parent_mat[i, parent_ind] = -1
 parent_mat = parent_mat[parent_mat.sum(axis=1)==0, :]
 
-#### Data preparation
+print("Data preparation...")
 DX_df = train_df[DXs]
 DX_df = DX_df.fillna('missing')
 DX_df[DX_df.isin(['invl', 'incn'])] = 'missing'
@@ -338,7 +341,7 @@ for i, dx1 in enumerate(DX1_series_tst.values):
     
 y_tst = tst_df.readm30.astype(int).values
 
-#### Model building
+print("Model building and training...")
 input_DX = Input(shape = (N_DX,))
 DX_embed = Embedding(input_dim=parent_mat.shape[1], output_dim=DX_embed_dim, mask_zero=True,
                      embeddings_regularizer=Mat_reg(parent_mat, 0.01), name='DX_embed')(input_DX)
@@ -376,15 +379,5 @@ y_pred = y[:, 1]
     
 fpr, tpr, _ = roc_curve(y_tst, y_pred)
 roc_auc = auc(fpr, tpr)
-with open('output/hypertune_masksum.csv', 'a') as f:
+with open('output/hypertune_masksum0.csv', 'a') as f:
             f.write('{0},{1},{2},{3},{4:.4f},{5},{6:.4f},{7:.4f},{8},{9:.4f}\n'.format(sum_layer, rare_cutpoint, DX_embed_dim, hosp_embed_dim, penalty, fc_width, lr, dropout, batchsize,roc_auc))
-        
-rare_cutpoint = args.rare_cutpoint
-sum_layer = args.sum_layer
-DX_embed_dim = args.dx_dim
-hosp_embed_dim = args.hosp_dim
-penalty = args.penalty
-fc_width = args.fc_width
-lr = args.lr
-dropout = args.dropout
-batchsize = args.batchsize

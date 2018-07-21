@@ -1,0 +1,27 @@
+#!/bin/sh
+
+#### PBS preamble
+
+#PBS -N hyper_tune
+
+#PBS -M wsliu@umich.edu
+#PBS -m abe
+
+#PBS -A bnallamo_armisg
+
+#PBS -q armisg
+
+#PBS -V
+#PBS -l nodes=1:gpus=1,mem=8gb,walltime=72:00:00
+#PBS -j oe
+
+#### End PBS preamble
+
+#  Show list of CPUs you ran on, if you're running under PBS
+if [ -n "$PBS_NODEFILE" ]; then cat $PBS_NODEFILE; fi
+
+#  Change to the directory you submitted from
+if [ -n "$PBS_O_WORKDIR" ]; then cd $PBS_O_WORKDIR; fi
+
+#  Put your job commands here:
+sh hypertune0.sh 

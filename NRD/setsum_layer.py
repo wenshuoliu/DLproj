@@ -1,5 +1,5 @@
 import keras.backend as K
-from keras.engine.base_layer import InputSpec, Layer
+from keras.engine.topology import InputSpec, Layer
 from keras import activations, initializers, regularizers, constraints
 
 class SetSum(Layer):
