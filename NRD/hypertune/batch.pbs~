@@ -7,12 +7,11 @@
 #PBS -M wsliu@umich.edu
 #PBS -m abe
 
-#PBS -A awaljee_fluxg
-
-#PBS -q fluxg
+#PBS -A awaljee_fluxod
+#PBS -q fluxod
 
 #PBS -V
-#PBS -l nodes=1:gpus=1:titanv,mem=8gb,walltime=72:00:00
+#PBS -l nodes=1:ppn=2,mem=16gb,walltime=72:00:00
 #PBS -j oe
 
 #### End PBS preamble
@@ -24,4 +23,4 @@ if [ -n "$PBS_NODEFILE" ]; then cat $PBS_NODEFILE; fi
 if [ -n "$PBS_O_WORKDIR" ]; then cd $PBS_O_WORKDIR; fi
 
 #  Put your job commands here:
-sh hypertune0.sh
+sh hypertune7.sh

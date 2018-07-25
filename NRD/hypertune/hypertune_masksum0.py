@@ -47,8 +47,8 @@ from keras_addon import AUCCheckPoint
 from utils import Mat_reg
 from setsum_layer import SetSum, MaskedSum
 
-#path = '/nfs/turbo/umms-awaljee/wsliu/Data/NRD/'
-path = '/nfs/turbo/intmed-bnallamo-turbo/wsliu/Data/NRD/'
+path = '/nfs/turbo/umms-awaljee/wsliu/Data/NRD/'
+#path = '/nfs/turbo/intmed-bnallamo-turbo/wsliu/Data/NRD/'
 model_path = path + 'models/'
 if not os.path.exists(model_path): 
     os.mkdir(model_path)
@@ -364,7 +364,7 @@ model.compile(optimizer=adam, loss='categorical_crossentropy')
 
 class_weight = {0:(Y_trn.shape[0]/sum(Y_trn[:, 0])), 1:(Y_trn.shape[0]/sum(Y_trn[:, 1]))}
 
-auccheckpoint = AUCCheckPoint(filepath=model_path+'amiccs_lstm_masksum_temp.h5', validation_y=Y_val[:, 1], validation_x=[demo_mat_val, DX1_mat_val, DX_mat_val, hosp_array_val])
+auccheckpoint = AUCCheckPoint(filepath=model_path+'amiccs_lstm_masksum_temp0.h5', validation_y=Y_val[:, 1], validation_x=[demo_mat_val, DX1_mat_val, DX_mat_val, hosp_array_val])
 reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.2, patience=5, min_lr=K.epsilon())
 earlystop = EarlyStopping(monitor='val_loss', patience=30)
 
@@ -373,7 +373,7 @@ hist = model.fit([demo_mat_trn, DX1_mat_trn, DX_mat_trn, hosp_array_trn], Y_trn,
                  validation_data=[[demo_mat_val, DX1_mat_val, DX_mat_val, hosp_array_val], Y_val], 
                 verbose=2)
         
-model.load_weights(model_path+'amiccs_lstm_masksum_temp.h5')
+model.load_weights(model_path+'amiccs_lstm_masksum_temp0.h5')
 y = model.predict([demo_mat_tst, DX1_mat_tst, DX_mat_tst, hosp_array_tst], verbose=0)
 y_pred = y[:, 1]
     

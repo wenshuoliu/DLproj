@@ -20,10 +20,14 @@ class Mat_reg(Regularizer):
         lamb: Float; the penalty tuning parameter. 
     """
 
-    def __init__(self, mat, lamb):
+    def __init__(self, mat, lamb, norm=2):
         self.lamb = K.cast_to_floatx(lamb)
         self.pmat = K.constant(value=mat, dtype=K.floatx(), name='parent_mat')
+        self.norm = norm
 
     def __call__(self, embed_mat):
-        diff = K.dot(self.pmat, embed_mat) #difference between each code and its parent
-        return self.lamb*K.sum(K.square(diff))
+        diff = K.dot(self.pmat, embed_mat) #difference between each embedding and its parent
+        if self.norm==2:
+            return self.lamb*K.sum(K.square(diff))
+        else:
+            return self.lamb*K.sum(K.abs(diff))
