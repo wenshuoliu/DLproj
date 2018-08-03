@@ -12,15 +12,14 @@ parser.add_argument('--fc_width', type=int, default=32)
 parser.add_argument('--lr', type=float, default=0.0002)
 parser.add_argument('--dropout', type=float, default=0.5)
 parser.add_argument('--batchsize', type=int, default=128)
-parser.add_argument('--rm_all_missing', type=bool, default=False)
+parser.add_argument('--rm_all_missing', type=int, default=0, help='1 is true, 0 is false')
 parser.add_argument('--dense_activation', type=str, default='relu')
-parser.add_argument('--output_file', type=str, default='output/result.csv')
+parser.add_argument('--job_index', type=int, default=0)
 
 args = parser.parse_args()
 model_name = args.model_name
 penalty_norm = args.penalty_norm
 rare_cutpoint = args.rare_cutpoint
-sum_layer = args.sum_layer
 DX_embed_dim = args.dx_dim
 hosp_embed_dim = args.hosp_dim
 penalty = args.penalty
@@ -28,9 +27,9 @@ fc_width = args.fc_width
 lr = args.lr
 dropout = args.dropout
 batchsize = args.batchsize
-output_file = args.output_file
 rm_all_missing = args.rm_all_missing
 dense_activation = args.dense_activation
+job_index = args.job_index
 
 import pandas as pd
 import numpy as np
@@ -399,7 +398,7 @@ model.compile(optimizer=adam, loss='categorical_crossentropy')
 
 class_weight = {0:(Y_trn.shape[0]/sum(Y_trn[:, 0])), 1:(Y_trn.shape[0]/sum(Y_trn[:, 1]))}
 
-auccheckpoint = AUCCheckPoint(filepath=model_path+'amiccs_setsum_temp.h5', validation_y=Y_val[:, 1], validation_x=[demo_mat_val, DX1_mat_val, DX_mat_val, hosp_array_val])
+auccheckpoint = AUCCheckPoint(filepath=model_path+'amiccs_setsum_temp'+str(job_index)+'.h5', validation_y=Y_val[:, 1], validation_x=[demo_mat_val, DX1_mat_val, DX_mat_val, hosp_array_val])
 reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.2, patience=5, min_lr=K.epsilon())
 earlystop = EarlyStopping(monitor='val_loss', patience=30)
 
@@ -408,11 +407,11 @@ hist = model.fit([demo_mat_trn, DX1_mat_trn, DX_mat_trn, hosp_array_trn], Y_trn,
                  validation_data=[[demo_mat_val, DX1_mat_val, DX_mat_val, hosp_array_val], Y_val], 
                 verbose=2)
         
-model.load_weights(model_path+'amiccs_setsum_temp.h5')
+model.load_weights(model_path+'amiccs_setsum_temp'+str(job_index)+'.h5')
 y = model.predict([demo_mat_tst, DX1_mat_tst, DX_mat_tst, hosp_array_tst], verbose=0)
 y_pred = y[:, 1]
     
 fpr, tpr, _ = roc_curve(y_tst, y_pred)
 roc_auc = auc(fpr, tpr)
-with open(output_file, 'a') as f:
-            f.write('{0},{1},{2},{3},{4},{5},{6:.4f},{7:.4f},{8},{9:.4f},{10},{11},{12:.4f}\n'.format(model_name, penalty_norm, rare_cutpoint, fc_width, DX_embed_dim, hosp_embed_dim, lr, dropout, batchsize, penalty, rm_all_missing, dense_activation, roc_auc))
+with open('output/result0725_'+str(job_index)+'.csv', 'a') as f:
+    f.write('{0},{1},{2},{3},{4},{5},{6:.6f},{7:.4f},{8},{9:.4f},{10},{11},{12:.4f}\n'.format(model_name, penalty_norm, rare_cutpoint, fc_width, DX_embed_dim, hosp_embed_dim, lr, dropout, batchsize, penalty, rm_all_missing, dense_activation, roc_auc))
