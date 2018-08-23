@@ -53,22 +53,24 @@ class Glove(object):
         else:
             return np.power(count/self.__count_cap, self.__scaling_factor)
         
-    def train_glove(self, cooccur_df=None, cache_path='./', batch_size=512, epochs=50, earlystop_patience=15, validation_split=0.2, verbose=1):
+    def train_glove(self, cooccur_df=None, cache_path='./', batch_size=512, epochs=50, earlystop_patience=20, reducelr_patience=10, validation_split=0.2, verbose=1):
         print('Preparing data...')
         if cooccur_df is None:
             cooccur_df = self.get_cooccur_df()
-        focal_id = np.concatenate([cooccur_df.focal_index.values, cooccur_df.context_index.values])
-        context_id = np.concatenate([cooccur_df.context_index.values, cooccur_df.focal_index.values])
-        y = np.log(np.tile(cooccur_df.cooccur_counts.values, 2))
-        weights = np.tile(cooccur_df.cooccur_counts.apply(self.__weighting_factor).values, 2)
+        focal_id = cooccur_df.focal_index.values
+        context_id = cooccur_df.context_index.values
+        y = np.log(cooccur_df.cooccur_counts.values)
+        weights = cooccur_df.cooccur_counts.apply(self.__weighting_factor).values
         
         print('Defining the GloVe model...')
         input_w = Input(shape=(1,), name='focal_index')
         input_v = Input(shape=(1,), name='context_index')
-        w_embed = Embedding(input_dim=self.__input_dim, output_dim=self.__embed_dim, name='w_embed')(input_w)
-        v_embed = Embedding(input_dim=self.__input_dim, output_dim=self.__embed_dim, name='v_embed')(input_v)
-        w_bias = Embedding(input_dim=self.__input_dim, output_dim=1, name='w_bias')(input_w)
-        v_bias = Embedding(input_dim=self.__input_dim, output_dim=1, name='v_bias')(input_v)
+        embed_layer = Embedding(input_dim=self.__input_dim, output_dim=self.__embed_dim, name='embed')
+        w_embed = embed_layer(input_w)
+        v_embed = embed_layer(input_v)
+        bias_layer = Embedding(input_dim=self.__input_dim, output_dim=1, name='bias')
+        w_bias = bias_layer(input_w)
+        v_bias = bias_layer(input_v)
         w_embed = Reshape((self.__embed_dim, ))(w_embed)
         v_embed = Reshape((self.__embed_dim, ))(v_embed)
         w_bias = Reshape((1,))(w_bias)
@@ -82,7 +84,7 @@ class Glove(object):
         model.compile(optimizer='adam', loss='mse')
         
         checkpoint = ModelCheckpoint(filepath=cache_path+'glove_temp.h5', save_best_only=True, save_weights_only=True)
-        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=K.epsilon())
+        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=reducelr_patience, min_lr=K.epsilon())
         earlystop = EarlyStopping(monitor='val_loss', patience=earlystop_patience)
         
         print('Training the GloVe model...')
@@ -92,14 +94,11 @@ class Glove(object):
         
         model.load_weights(cache_path+'glove_temp.h5')
         for l in model.layers:
-            if l.name=='w_embed':
-                w_embed_mat = l.get_weights()[0]
-            elif l.name=='v_embed':
-                v_embed_mat = l.get_weights()[0]
-        embed_mat = w_embed_mat + v_embed_mat
+            if l.name=='embed':
+                embed_mat = l.get_weights()[0]
         os.remove(cache_path+'glove_temp.h5')
         self.__embed_mat = embed_mat
-        print('Finished.')
+        print('Finished. The pretrained embedding matrix can be retrieved by .get_embed_mat().')
         
     def get_embed_mat(self):
         return self.__embed_mat

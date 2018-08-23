@@ -191,3 +191,23 @@ class Mat_reg(Regularizer):
             return self.lamb*K.sum(K.square(diff))
         else:
             return self.lamb*K.sum(K.abs(diff))
+        
+        
+class Parent_reg(Regularizer):
+    """Regularizer by adding penalization between each embedding and its parent.
+    # Arguments
+        mat: numpy array; the matrix indicating the parent of each code.
+        lamb: Float; the penalty tuning parameter. 
+    """
+
+    def __init__(self, mat, lamb, norm=2):
+        self.lamb = K.cast_to_floatx(lamb)
+        self.pmat = K.constant(value=mat, dtype=K.floatx(), name='parent_mat')
+        self.norm = norm
+
+    def __call__(self, embed_mat):
+        diff = K.dot(self.pmat, embed_mat) #difference between each embedding and its parent
+        if self.norm==2:
+            return self.lamb*K.sum(K.square(diff))
+        else:
+            return self.lamb*K.sum(K.abs(diff))
