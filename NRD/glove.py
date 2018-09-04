@@ -10,6 +10,7 @@ from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from keras.optimizers import Adam
 import keras.backend as K
 import time
+from utils import Parent_reg
 
 class Glove(object):
     """ The class to train embedding by GloVe.
@@ -37,6 +38,11 @@ class Glove(object):
                     self.__cooccur_counts[(code_l[i], code_l[j])] += 1
         print('Finished. It takes {:.1f} seconds to update the cooccurrences.'.format(time.time()-start))
         
+    def get_cooccur_dict(self):
+        if len(self.__cooccur_counts) == 0:
+            raise ValueError('Co-occurrences is empty!')
+        return self.__cooccur_counts
+    
     def get_cooccur_df(self):
         if len(self.__cooccur_counts) == 0:
             raise ValueError('Co-occurrences is empty!')
@@ -53,7 +59,7 @@ class Glove(object):
         else:
             return np.power(count/self.__count_cap, self.__scaling_factor)
         
-    def train_glove(self, cooccur_df=None, cache_path='./', batch_size=512, epochs=50, earlystop_patience=20, reducelr_patience=10, validation_split=0.2, verbose=1):
+    def train_glove(self, cooccur_df=None, cache_path='./', batch_size=512, epochs=50, earlystop_patience=20, reducelr_patience=10, validation_split=0.2, verbose=1, parent_pairs=None, lamb=1e-3, norm=2):
         print('Preparing data...')
         if cooccur_df is None:
             cooccur_df = self.get_cooccur_df()
@@ -65,7 +71,11 @@ class Glove(object):
         print('Defining the GloVe model...')
         input_w = Input(shape=(1,), name='focal_index')
         input_v = Input(shape=(1,), name='context_index')
-        embed_layer = Embedding(input_dim=self.__input_dim, output_dim=self.__embed_dim, name='embed')
+        if parent_pairs is None:
+            embed_layer = Embedding(input_dim=self.__input_dim, output_dim=self.__embed_dim, name='embed')
+        else:
+            embed_layer = Embedding(input_dim=self.__input_dim, output_dim=self.__embed_dim, name='embed',
+                                embeddings_regularizer=Parent_reg(parent_pairs, lamb, norm))
         w_embed = embed_layer(input_w)
         v_embed = embed_layer(input_v)
         bias_layer = Embedding(input_dim=self.__input_dim, output_dim=1, name='bias')

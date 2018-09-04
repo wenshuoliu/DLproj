@@ -196,18 +196,23 @@ class Mat_reg(Regularizer):
 class Parent_reg(Regularizer):
     """Regularizer by adding penalization between each embedding and its parent.
     # Arguments
-        mat: numpy array; the matrix indicating the parent of each code.
+        parent_pairs: list of tuples representing the parent of each code
         lamb: Float; the penalty tuning parameter. 
     """
 
-    def __init__(self, mat, lamb, norm=2):
+    def __init__(self, parent_pairs, lamb, norm=2):
         self.lamb = K.cast_to_floatx(lamb)
-        self.pmat = K.constant(value=mat, dtype=K.floatx(), name='parent_mat')
+        self.code_ind, self.parent_ind = zip(*parent_pairs)
         self.norm = norm
 
-    def __call__(self, embed_mat):
-        diff = K.dot(self.pmat, embed_mat) #difference between each embedding and its parent
+    def __call__(self, embed_mat):        
+        #select the codes and their parents from the embedding matrix:
+        embeds = K.gather(embed_mat, self.code_ind)
+        parents = K.gather(embed_mat, self.parent_ind)
+        diff = embeds - parents
         if self.norm==2:
-            return self.lamb*K.sum(K.square(diff))
+            return self.lamb*K.mean(K.square(diff))
+        elif self.norm==1:
+            return self.lamb*K.mean(K.abs(diff))
         else:
-            return self.lamb*K.sum(K.abs(diff))
+            raise ValueError('Penalization norm has to be 1 or 2!')

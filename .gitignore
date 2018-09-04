@@ -1,7 +1,7 @@
 */*.pbs
 */*.pbs~
 */*.py~
-*/hypertune/
+hypertune/
 output/
 __pycache__/
 */.ipynb_checkpoints/

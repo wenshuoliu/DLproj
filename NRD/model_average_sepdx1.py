@@ -30,20 +30,16 @@ train_df = pd.read_csv(path+'cohorts/ami/DX_train.csv', dtype=core_dtypes_pd)
 tst_df = pd.read_csv(path+'cohorts/ami/DX_tst.csv', dtype=core_dtypes_pd)
 all_df = pd.concat([train_df, tst_df])
 
+DX1_cat = ['missing'] + sorted(dx_multi.ICD9CM_CODE)
 DX_cat = ['missing'] + sorted(dx_multi.ICD9CM_CODE)
 PR_cat = ['missing'] + sorted(pr_multi.ICD9CM_CODE)
+code_cat = ['missing'] + sorted(dx_multi.ICD9CM_CODE) + sorted(dx_multi.ICD9CM_CODE) + sorted(pr_multi.ICD9CM_CODE)
 n_DX_cat = len(DX_cat)
 n_PR_cat = len(PR_cat)
-DX_dict = dict(zip(DX_cat, range(len(DX_cat))))
-PR_dict = dict(zip(PR_cat, [0] + list(range(len(DX_cat), len(DX_cat)+len(PR_cat)))))
-unclassified = set(dx_multi.loc[dx_multi.CCS_LVL1 == '18', 'ICD9CM_CODE'])
-dx_ccs_cat = pd.concat([dx_multi.CCS_LVL1, dx_multi.CCS_LVL2, dx_multi.CCS_LVL3, dx_multi.CCS_LVL4]).astype('category').cat.categories
-pr_ccs_cat = pd.concat([pr_multi.CCS_LVL1, pr_multi.CCS_LVL2, pr_multi.CCS_LVL3]).astype('category').cat.categories
-code_cat = ['missing'] + sorted(dx_multi.ICD9CM_CODE) + sorted(pr_multi.ICD9CM_CODE) + sorted(dx_ccs_cat)[1:] + sorted(pr_ccs_cat)[1:]
 n_code_cat = len(code_cat)
-dx_ccs_dict = dict(zip(dx_ccs_cat[1:], range(len(dx_multi)+len(pr_multi)+1, len(dx_multi)+len(pr_multi)+len(dx_ccs_cat))))
-pr_ccs_dict = dict(zip(pr_ccs_cat[1:], range(len(dx_multi)+len(pr_multi)+len(dx_ccs_cat), n_code_cat)))
-
+DX1_dict = dict(zip(DX1_cat, range(len(DX_cat))))
+DX_dict = dict(zip(DX_cat, [0] + list(range(len(DX_cat), len(DX_cat)*2))))
+PR_dict = dict(zip(PR_cat, [0] + list(range(len(DX_cat)*2-1, len(DX_cat)*2+len(PR_cat)-1))))
 n_DX = 29
 n_PR = 15
 DXs = ['DX'+str(j) for j in range(2, n_DX+2)]
@@ -100,7 +96,7 @@ for fold_ind in range(n_fold):
     N_trn = len(trn_df)
     train_df = pd.concat([trn_df, val_df])
     
-    DX1_series = train_df['DX1'].map(DX_dict)
+    DX1_series = train_df['DX1'].map(DX1_dict)
     DX1_array = DX1_series.values
     DX1_array_trn = DX1_array[:N_trn]
     DX1_array_val = DX1_array[N_trn:]
