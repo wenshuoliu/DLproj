@@ -110,6 +110,67 @@ class Glove(object):
         self.__embed_mat = embed_mat
         print('Finished. The pretrained embedding matrix can be retrieved by .get_embed_mat().')
         
-    def get_embed_mat(self):
-        return self.__embed_mat
+    def train_glove_double(self, cooccur_df=None, cache_path='./', batch_size=512, epochs=50, earlystop_patience=20, reducelr_patience=10, validation_split=0.2, verbose=1, focal_initializer='uniform', context_initializer='uniform', focal_trainable=True, context_trainable=True):
+        '''This function train two sets of embedding: one for focal word, one for context word. It has the option to freeze one of them. 
+        '''
+        print('Preparing data...')
+        if cooccur_df is None:
+            cooccur_df = self.get_cooccur_df()
+        focal_id = cooccur_df.focal_index.values
+        context_id = cooccur_df.context_index.values
+        y = np.log(cooccur_df.cooccur_counts.values)
+        weights = cooccur_df.cooccur_counts.apply(self.__weighting_factor).values
+        
+        print('Defining the GloVe model...')
+        input_w = Input(shape=(1,), name='focal_index')
+        input_v = Input(shape=(1,), name='context_index')
+        w_embed = Embedding(input_dim=self.__input_dim, output_dim=self.__embed_dim, name='focal_embed', 
+                            embeddings_initializer=focal_initializer)(input_w)
+        v_embed = Embedding(input_dim=self.__input_dim, output_dim=self.__embed_dim, name='context_embed', 
+                            embeddings_initializer=context_initializer)(input_v)
+        w_bias = Embedding(input_dim=self.__input_dim, output_dim=1, name='focal_bias')(input_w)
+        v_bias = Embedding(input_dim=self.__input_dim, output_dim=1, name='context_bias')(input_v)
+        w_embed = Reshape((self.__embed_dim, ))(w_embed)
+        v_embed = Reshape((self.__embed_dim, ))(v_embed)
+        w_bias = Reshape((1,))(w_bias)
+        v_bias = Reshape((1,))(v_bias)
+        inner = Multiply()([w_embed, v_embed])
+        inner = Lambda(lambda x: K.sum(x, axis=1, keepdims=True))(inner)
+        merged = Concatenate(axis=1)([inner, w_bias, v_bias])
+        out = Lambda(lambda x: K.sum(x, axis=1, keepdims=True))(merged)
+        model = Model(inputs=[input_w, input_v], outputs = out)
+        
+        for l in model.layers:
+            if l.name=='focal_embed':
+                l.trainable = focal_trainable
+            if l.name=='context_embed':
+                l.trainable = context_trainable
+        
+        model.compile(optimizer='adam', loss='mse')
+        
+        checkpoint = ModelCheckpoint(filepath=cache_path+'glove_temp.h5', save_best_only=True, save_weights_only=True)
+        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=reducelr_patience, min_lr=K.epsilon())
+        earlystop = EarlyStopping(monitor='val_loss', patience=earlystop_patience)
+        
+        print('Training the GloVe model...')
+        hist = model.fit([focal_id, context_id], y, batch_size=batch_size, epochs=epochs, validation_split=validation_split,
+                         sample_weight=weights, callbacks=[checkpoint, reduce_lr, earlystop], verbose=verbose)
+        self.train_history = hist
+        
+        model.load_weights(cache_path+'glove_temp.h5')
+        for l in model.layers:
+            if l.name=='focal_embed':
+                focal_embed_mat = l.get_weights()[0]
+            if l.name=='context_embed':
+                context_embed_mat = l.get_weights()[0]
+        os.remove(cache_path+'glove_temp.h5')
+        self.__focal_embed_mat = focal_embed_mat
+        self.__context_embed_mat = context_embed_mat
+        print('Finished. The pretrained embedding matrix can be retrieved by .get_embed_mat().')
+        
+    def get_embed_mat(self, double=False):
+        if double:
+            return self.__focal_embed_mat, self.__context_embed_mat
+        else:
+            return self.__embed_mat
                 
