@@ -59,7 +59,7 @@ class Glove(object):
         else:
             return np.power(count/self.__count_cap, self.__scaling_factor)
         
-    def train_glove(self, cooccur_df=None, cache_path='./', batch_size=512, epochs=50, earlystop_patience=20, reducelr_patience=10, validation_split=0.2, verbose=1, parent_pairs=None, lamb=1e-3, norm=2):
+    def train_glove(self, cooccur_df=None, cache_path='./', batch_size=512, epochs=50, earlystop_patience=20, reducelr_patience=10, verbose=1, parent_pairs=None, lamb=1., metric='l2'):
         print('Preparing data...')
         if cooccur_df is None:
             cooccur_df = self.get_cooccur_df()
@@ -75,7 +75,7 @@ class Glove(object):
             embed_layer = Embedding(input_dim=self.__input_dim, output_dim=self.__embed_dim, name='embed')
         else:
             embed_layer = Embedding(input_dim=self.__input_dim, output_dim=self.__embed_dim, name='embed',
-                                embeddings_regularizer=Parent_reg(parent_pairs, lamb, norm))
+                                embeddings_regularizer=Parent_reg(parent_pairs, lamb, metric))
         w_embed = embed_layer(input_w)
         v_embed = embed_layer(input_v)
         bias_layer = Embedding(input_dim=self.__input_dim, output_dim=1, name='bias')
@@ -93,12 +93,12 @@ class Glove(object):
         
         model.compile(optimizer='adam', loss='mse')
         
-        checkpoint = ModelCheckpoint(filepath=cache_path+'glove_temp.h5', save_best_only=True, save_weights_only=True)
-        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=reducelr_patience, min_lr=K.epsilon())
-        earlystop = EarlyStopping(monitor='val_loss', patience=earlystop_patience)
+        checkpoint = ModelCheckpoint(filepath=cache_path+'glove_temp.h5', monitor='loss', save_best_only=True, save_weights_only=True)
+        reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.2, patience=reducelr_patience, min_lr=K.epsilon())
+        earlystop = EarlyStopping(monitor='loss', patience=earlystop_patience)
         
         print('Training the GloVe model...')
-        hist = model.fit([focal_id, context_id], y, batch_size=batch_size, epochs=epochs, validation_split=validation_split,
+        hist = model.fit([focal_id, context_id], y, batch_size=batch_size, epochs=epochs,
                          sample_weight=weights, callbacks=[checkpoint, reduce_lr, earlystop], verbose=verbose)
         self.train_history = hist
         
@@ -106,11 +106,14 @@ class Glove(object):
         for l in model.layers:
             if l.name=='embed':
                 embed_mat = l.get_weights()[0]
+            if l.name=='bias':
+                bias_mat = l.get_weights()[0]
         os.remove(cache_path+'glove_temp.h5')
         self.__embed_mat = embed_mat
+        self.__bias_mat = bias_mat
         print('Finished. The pretrained embedding matrix can be retrieved by .get_embed_mat().')
         
-    def train_glove_double(self, cooccur_df=None, cache_path='./', batch_size=512, epochs=50, earlystop_patience=20, reducelr_patience=10, validation_split=0.2, verbose=1, focal_initializer='uniform', context_initializer='uniform', focal_trainable=True, context_trainable=True):
+    def train_glove_double(self, cooccur_df=None, cache_path='./', batch_size=512, epochs=50, earlystop_patience=20, reducelr_patience=10, verbose=1, focal_initializer='uniform', context_initializer='uniform', focal_trainable=True, context_trainable=True):
         '''This function train two sets of embedding: one for focal word, one for context word. It has the option to freeze one of them. 
         '''
         print('Preparing data...')
@@ -148,12 +151,12 @@ class Glove(object):
         
         model.compile(optimizer='adam', loss='mse')
         
-        checkpoint = ModelCheckpoint(filepath=cache_path+'glove_temp.h5', save_best_only=True, save_weights_only=True)
-        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=reducelr_patience, min_lr=K.epsilon())
-        earlystop = EarlyStopping(monitor='val_loss', patience=earlystop_patience)
+        checkpoint = ModelCheckpoint(filepath=cache_path+'glove_temp.h5', monitor='loss', save_best_only=True, save_weights_only=True)
+        reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.2, patience=reducelr_patience, min_lr=K.epsilon())
+        earlystop = EarlyStopping(monitor='loss', patience=earlystop_patience)
         
         print('Training the GloVe model...')
-        hist = model.fit([focal_id, context_id], y, batch_size=batch_size, epochs=epochs, validation_split=validation_split,
+        hist = model.fit([focal_id, context_id], y, batch_size=batch_size, epochs=epochs,
                          sample_weight=weights, callbacks=[checkpoint, reduce_lr, earlystop], verbose=verbose)
         self.train_history = hist
         
@@ -163,9 +166,15 @@ class Glove(object):
                 focal_embed_mat = l.get_weights()[0]
             if l.name=='context_embed':
                 context_embed_mat = l.get_weights()[0]
+            if l.name=='focal_bias':
+                focal_bias_mat = l.get_weights()[0]
+            if l.name=='context_bias':
+                context_bias_mat = l.get_weights()[0]
         os.remove(cache_path+'glove_temp.h5')
         self.__focal_embed_mat = focal_embed_mat
         self.__context_embed_mat = context_embed_mat
+        self.__focal_bias_mat = focal_bias_mat
+        self.__context_bias_mat = context_bias_mat
         print('Finished. The pretrained embedding matrix can be retrieved by .get_embed_mat().')
         
     def get_embed_mat(self, double=False):
@@ -174,3 +183,8 @@ class Glove(object):
         else:
             return self.__embed_mat
                 
+    def get_bias_mat(self, double=False):
+        if double:
+            return self.__focal_bias_mat, self.__context_bias_mat
+        else:
+            return self.__bias_mat

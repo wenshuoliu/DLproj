@@ -198,21 +198,28 @@ class Parent_reg(Regularizer):
     # Arguments
         parent_pairs: list of tuples representing the parent of each code
         lamb: Float; the penalty tuning parameter. 
+        metric: str, could be 'l1', 'l2', 'cosine'
     """
 
-    def __init__(self, parent_pairs, lamb, norm=2):
+    def __init__(self, parent_pairs, lamb, metric='cosine'):
         self.lamb = K.cast_to_floatx(lamb)
         self.code_ind, self.parent_ind = zip(*parent_pairs)
-        self.norm = norm
+        self.metric = metric
 
     def __call__(self, embed_mat):        
         #select the codes and their parents from the embedding matrix:
         embeds = K.gather(embed_mat, self.code_ind)
         parents = K.gather(embed_mat, self.parent_ind)
-        diff = embeds - parents
-        if self.norm==2:
-            return self.lamb*K.mean(K.square(diff))
-        elif self.norm==1:
-            return self.lamb*K.mean(K.abs(diff))
+        if self.metric=='cosine':
+            code_norm = K.sqrt(K.sum(K.square(embeds), axis=1))
+            parent_norm = K.sqrt(K.sum(K.square(parents), axis=1))
+            inner = K.sum(embeds*parents, axis=1)
+            return self.lamb*(1.-K.mean(inner/(code_norm*parent_norm)))
         else:
-            raise ValueError('Penalization norm has to be 1 or 2!')
+            diff = embeds - parents
+            if self.metric=='l2':
+                return self.lamb*K.mean(K.square(diff))
+            elif self.metric=='l1':
+                return self.lamb*K.mean(K.abs(diff))
+            else:
+                raise ValueError('Metric should be l1, l2 or cosine.')

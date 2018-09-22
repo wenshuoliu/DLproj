@@ -4,7 +4,7 @@ import numpy as np
 import os, time
 from sklearn.model_selection import train_test_split
 
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
+#os.environ['CUDA_VISIBLE_DEVICES'] = ''
 from glove import Glove
 from ccs_tools import dx_multi, pr_multi
 from utils import core_dtypes_pd, core_cols, na_values
@@ -12,6 +12,8 @@ from utils import core_dtypes_pd, core_cols, na_values
 path = '/nfs/turbo/umms-awaljee/wsliu/Data/NRD/'
 model_path = path + 'models/'
 if not os.path.exists(model_path): os.mkdir(model_path)
+    
+cohort = 'pna'
     
 DX1_cat = ['missing'] + sorted(dx_multi.ICD9CM_CODE)
 DX_cat = ['missing'] + sorted(dx_multi.ICD9CM_CODE)
@@ -67,11 +69,13 @@ for df in dxpr_df:
     chunk_id += 1
     
 cooccur_dict = g.get_cooccur_dict()
-ami_df = pd.read_csv(path+'cohorts/ami/ami_pred.csv', dtype=core_dtypes_pd)
+
+data_df = pd.read_csv(path+'cohorts/{}/{}_pred.csv'.format(cohort, cohort), dtype=core_dtypes_pd)
 
 for seed in range(10):
     print('Starting seed'+str(seed))
-    train_df, tst_df = train_test_split(ami_df, test_size=0.1, stratify=ami_df.HOSP_NRD, random_state=seed)
+    tst_key = pd.read_csv(path+'cohorts/{}/tst_key{}.csv'.format(cohort, seed), names = ['KEY_NRD'])
+    tst_df = data_df.loc[data_df.KEY_NRD.isin(tst_key.KEY_NRD)]
 
     DX1_df = tst_df[['DX1']]
     DX1_df = DX1_df.fillna('missing')
@@ -111,4 +115,4 @@ for seed in range(10):
     cooccur_df0 = pd.DataFrame(dict(focal_index=focal, context_index=context, cooccur_counts=counts), 
                               columns=['focal_index', 'context_index', 'cooccur_counts'])
     cooccur_df0 = cooccur_df0.loc[cooccur_df0.cooccur_counts>0]
-    cooccur_df0.to_csv(path+'all/sepdx1/cooccur_df_ami'+str(seed)+'.csv', index=False)
+    cooccur_df0.to_csv(path+'all/sepdx1/cooccur_df_{}{}.csv'.format(cohort, seed), index=False)

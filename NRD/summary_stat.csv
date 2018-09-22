@@ -1,0 +1,29 @@
+Predictors,No Readmission,Readmission
+Sample size,259194,46742
+"Age, mean (std)",68.6 (17.3),70.3 (15.8)
+Female pct.,52.6%,50.2%
+"No. of diagnosis codes, mean (std)",12.6 (5.8),14.6 (5.8)
+"No. of procedure codes, mean (std)",0.7 (1.5),1.0 (1.8)
+"Length of stay, mean (std)",5.2 (5.6),6.6 (7.0)
+Median household income by zipcode,,
+"$1-$39,999",29.3%,30.5%
+"$40,000-$50,999",28.2%,28.2%
+"$51,000-$65,999",22.9%,22.1%
+"$66,000+",19.7%,19.2%
+Insurance status,,
+Medicare,72.8%,79.9%
+Medicaid,9.2%,9.9%
+Private,13.0%,7.7%
+Uninsured/other,5.0%,2.6%
+Transfer hospitalization,,
+Not a transfer or other same-day stay,98.0%,97.5%
+Transfer involving two discharges from different hospitals,0.4%,0.5%
+Same-day stay involving two discharges from different hospitals,0.4%,0.5%
+Same-day stay involving two discharges at the same hospital,1.1%,1.3%
+Same-day stay involving three or more discharges at the same or different hospitals,0.1%,0.2%
+Emergency department services,,
+Record does not meet any HCUP Emergency Department criteria,13.5%,11.6%
+Emergency Department revenue code on record,57.6%,57.3%
+Positive Emergency Department charge (when revenue center codes are not available),14.7%,16.2%
+Emergency Department CPT procedure code on record,0.0%,0.0%
+"Condition code P7 indication of ED admission, point of origin of ED, or admission source of ED",14.3%,15.0%
