@@ -59,7 +59,7 @@ class Glove(object):
         else:
             return np.power(count/self.__count_cap, self.__scaling_factor)
         
-    def train_glove(self, cooccur_df=None, cache_path='./', batch_size=512, epochs=50, earlystop_patience=20, reducelr_patience=10, verbose=1, parent_pairs=None, lamb=1., metric='l2'):
+    def train_glove(self, cooccur_df=None, cache_path='./', batch_size=512, lr=1e-3, epochs=50, earlystop_patience=20, reducelr_patience=10, verbose=1, parent_pairs=None, lamb=1., metric='l2'):
         print('Preparing data...')
         if cooccur_df is None:
             cooccur_df = self.get_cooccur_df()
@@ -91,7 +91,8 @@ class Glove(object):
         out = Lambda(lambda x: K.sum(x, axis=1, keepdims=True))(merged)
         model = Model(inputs=[input_w, input_v], outputs = out)
         
-        model.compile(optimizer='adam', loss='mse')
+        adam = Adam(lr=lr)
+        model.compile(optimizer=adam, loss='mse')
         
         checkpoint = ModelCheckpoint(filepath=cache_path+'glove_temp.h5', monitor='loss', save_best_only=True, save_weights_only=True)
         reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.2, patience=reducelr_patience, min_lr=K.epsilon())
