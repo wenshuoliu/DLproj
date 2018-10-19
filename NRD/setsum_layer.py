@@ -165,7 +165,7 @@ class MaskedPooling(Layer):
     """
     def __init__(self, **kwargs):
         self.supports_masking = True
-        super(MaskedSum, self).__init__(**kwargs)
+        super(MaskedPooling, self).__init__(**kwargs)
 
     def call(self, inputs, mask=None):
         assert len(inputs.shape) == 3

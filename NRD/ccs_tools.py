@@ -20,6 +20,15 @@ dx_multi.finest_non_empty[dx_multi.finest_non_empty==''] = dx_multi.CCS_LVL3[dx_
 dx_multi.finest_non_empty[dx_multi.finest_non_empty==''] = dx_multi.CCS_LVL2[dx_multi.finest_non_empty == '']
 dx_multi.finest_non_empty[dx_multi.finest_non_empty==''] = dx_multi.CCS_LVL1[dx_multi.finest_non_empty == '']
 
+## Single-level CCS categories of DX codes
+dx_single = pd.read_csv(path+'dxref_2015.csv', skiprows=1)
+dx_single.columns = ['ICD9CM_CODE', 'CCS_CATEGORY', 'CCS_CATEGORY_DESCRIPTION', 'ICD9CM_CODE_DESCRIPTION', 
+                     'OPTIONAL_CCS_CATEGORY', 'OPTIONAL_CCS_CATEGORY_DESCRIPTION']
+for c in dx_single.columns:
+    dx_single[c] = dx_single[c].apply(lambda x:x.replace("'", ''))
+for c in ['ICD9CM_CODE', 'CCS_CATEGORY']:
+    dx_single[c] = dx_single[c].apply(lambda x:x.replace(' ', ''))
+dx_single = dx_single.set_index(dx_single.ICD9CM_CODE)
     
 ## Multi-level CCS categories of PR codes
 pr_multi = pd.read_csv(path+'ccs_multi_pr_tool_2015.csv')
