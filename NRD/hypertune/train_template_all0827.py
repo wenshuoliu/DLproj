@@ -121,6 +121,9 @@ age_mean = train_df0['AGE'].mean()
 age_std = train_df0['AGE'].std()
 los_mean = train_df0['LOS'].mean()
 los_std = train_df0['LOS'].std()
+n_pay1 = int(train_df0['PAY1'].max())+1
+n_ed = int(train_df0['HCUP_ED'].max())+1
+n_zipinc = int(train_df0['ZIPINC_QRTL'].max())+1
 
 DX1_array_tst = tst_df.DX1.map(DX1_dict).values
 DX_df_tst = tst_df[DXs]
@@ -139,10 +142,10 @@ PR_mat_tst = PR_df_tst.values
 demo_mat_tst = tst_df[['AGE', 'FEMALE']].values
 demo_mat_tst[:, 0] = (demo_mat_tst[:, 0]-age_mean)/age_std
 hosp_array_tst = tst_df['HOSP_NRD'].map(hosp_dict).values
-pay1_mat_tst = to_categorical(tst_df.PAY1.values)[:, 1:]
+pay1_mat_tst = to_categorical(tst_df.PAY1.values, num_classes=n_pay1)[:, 1:]
 los_array_tst = (tst_df.LOS.values - los_mean)/los_std
-ed_mat_tst = to_categorical(tst_df.HCUP_ED.values)
-zipinc_mat_tst = to_categorical(tst_df.ZIPINC_QRTL.values)[:, 1:]
+ed_mat_tst = to_categorical(tst_df.HCUP_ED.values, num_classes=n_ed)
+zipinc_mat_tst = to_categorical(tst_df.ZIPINC_QRTL.values, num_classes=n_zipinc)[:, 1:]
 #transfer_mat_tst = to_categorical(tst_df.SAMEDAYEVENT.values)
 other_mat_tst = np.concatenate((demo_mat_tst, pay1_mat_tst, los_array_tst.reshape(los_array_tst.shape+(1,)), 
                                 ed_mat_tst, zipinc_mat_tst), axis=1)
@@ -197,11 +200,11 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
     
     demo_mat = train_df[['AGE', 'FEMALE']].values
     demo_mat[:, 0] = (demo_mat[:, 0]-age_mean)/age_std
-    pay1_mat = to_categorical(train_df.PAY1.values)[:, 1:]
+    pay1_mat = to_categorical(train_df.PAY1.values, num_classes=n_pay1)[:, 1:]
     los_array = train_df.LOS.values
     los_array = (los_array - los_mean)/los_std
-    ed_mat = to_categorical(train_df.HCUP_ED.values)
-    zipinc_mat = to_categorical(train_df.ZIPINC_QRTL.values)[:, 1:]
+    ed_mat = to_categorical(train_df.HCUP_ED.values, num_classes=n_ed)
+    zipinc_mat = to_categorical(train_df.ZIPINC_QRTL.values, num_classes=n_zipinc)[:, 1:]
     #transfer_mat = to_categorical(train_df.SAMEDAYEVENT.values)
     other_mat = np.concatenate((demo_mat, pay1_mat, los_array.reshape(los_array.shape+(1,)), ed_mat, zipinc_mat), axis=1)
     other_mat_trn = other_mat[:N_trn, ]
@@ -210,8 +213,6 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
     y = train_df['readm30'].values.astype(int)
     y_trn = y[:N_trn]
     y_val = y[N_trn:]
-    #Y_trn = to_categorical(y[:N_trn])
-    #Y_val = to_categorical(y[N_trn:])
     
     # model building 
     if model_name=='setsum':
