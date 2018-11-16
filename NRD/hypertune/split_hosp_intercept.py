@@ -43,7 +43,7 @@ if module_path+'/NRD' not in sys.path:
     sys.path.append(module_path+'/NRD')
 from DL_utils import plot_roc
 from keras_addon import AUCCheckPoint
-from utils import Mat_reg
+from utils import Parent_reg, get_frequency, preprocess
 
 from ccs_tools import dx_multi, pr_multi, core_dtypes_pd
 from setsum_layer import MaskedSum, MaskedDense
@@ -53,7 +53,6 @@ train_df0 = pd.read_csv(path+'cohorts30/{}/inference/index_split{}_{}.csv'.forma
 train_df0 = train_df0.reset_index(drop=True)
 tst_df = pd.read_csv(path+'cohorts30/{}/inference/index_split{}_{}.csv'.format(cohort, split_seed, 3-train_idx), dtype=core_dtypes_pd)
 index_df = train_df0.sample(frac=0.1, random_state=24)
-train_df0 = train_df0.groupby('HOSP_NRD').apply(lambda x:x.sample(frac=1., random_state=sample_seed, replace=True)).reset_index(drop=True)
 
 #define dictionaries from codes to int
 DX_cat = ['missing'] + sorted(dx_multi.ICD9CM_CODE)
@@ -108,6 +107,9 @@ PR_mat_tst = PR_df_tst.values
 demo_mat_tst = tst_df[['AGE', 'FEMALE']].values
 demo_mat_tst[:, 0] = (demo_mat_tst[:, 0]-age_mean)/age_std
 hosp_array_tst = tst_df['HOSP_NRD'].map(hosp_dict).values
+#hosp_ohe_tst = np.zeros((len(tst_df), len(hosp_cat)))
+#for j, hosp in enumerate(hosp_array_tst):
+#    hosp_ohe_tst[j, hosp] = 1.
 pay1_mat_tst = to_categorical(tst_df.PAY1.values, num_classes=n_pay1)[:, 1:]
 los_array_tst = (tst_df.LOS.values - los_mean)/los_std
 ed_mat_tst = to_categorical(tst_df.HCUP_ED.values, num_classes=n_ed)
@@ -134,6 +136,9 @@ PR_mat_index = PR_df_index.values
 demo_mat_index = index_df[['AGE', 'FEMALE']].values
 demo_mat_index[:, 0] = (demo_mat_index[:, 0]-age_mean)/age_std
 hosp_array_index = index_df['HOSP_NRD'].map(hosp_dict).values
+#hosp_ohe_index = np.zeros((len(index_df), len(hosp_cat)))
+#for j, hosp in enumerate(hosp_array_index):
+#    hosp_ohe_index[j, hosp] = 1.
 pay1_mat_index = to_categorical(index_df.PAY1.values, num_classes=n_pay1)[:, 1:]
 los_array_index = (index_df.LOS.values - los_mean)/los_std
 ed_mat_index = to_categorical(index_df.HCUP_ED.values, num_classes=n_ed)
@@ -159,12 +164,9 @@ embed_initializer = Constant(embed_glove)
 auc_lst = []
 y_pred_lst = []
 recycle_pred = np.zeros((len(hosp_cat), n_val))
+hosp_embed_mats = []
 for val_ind in range(n_val):
-    split = GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=24+val_ind)
-    ind = split.split(train_df0, groups=train_df0.KEY_NRD)
-    trn_ind, val_ind = next(ind)
-    trn_df = train_df0.loc[trn_ind, ]
-    val_df = train_df0.loc[val_ind, ]
+    trn_df, val_df = train_test_split(train_df0, test_size=0.2, random_state=24+val_ind, stratify=train_df0.HOSP_NRD)
     N_trn = len(trn_df)
     train_df = pd.concat([trn_df, val_df])
     
@@ -228,13 +230,14 @@ for val_ind in range(n_val):
     PR_embed = MaskedDense(md_width, activation='relu')(PR_embed)
     PR_embed = MaskedSum()(PR_embed)
     input_hosp = Input(shape=(1,))
-    hosp_embed = Embedding(input_dim=len(hosp_cat), output_dim=hosp_embed_dim, input_length=1)(input_hosp)
+    hosp_embed = Embedding(input_dim=len(hosp_cat), output_dim=hosp_embed_dim, input_length=1, name='hosp_embed')(input_hosp)
     hosp_embed = Reshape((hosp_embed_dim, ))(hosp_embed)
     input_other = Input(shape=(other_mat.shape[1], ))
-    merged = Concatenate(axis=1)([DX1_embed, DX_embed, PR_embed, hosp_embed, input_other])
+    merged = Concatenate(axis=1)([DX1_embed, DX_embed, PR_embed, input_other])
     x = Dense(fc_width, activation='relu')(merged)
     x = Dropout(dropout)(x)
-    prediction = Dense(1, activation='sigmoid')(x)
+    x = Concatenate(axis=1)([x, hosp_embed])
+    prediction = Dense(1, activation='sigmoid', name='prediction', use_bias=False)(x)
     model = Model(inputs=[input_DX1, input_DX, input_PR, input_hosp, input_other], outputs=prediction)     
     
     for l in model.layers:
@@ -247,7 +250,7 @@ for val_ind in range(n_val):
     checkpoint = AUCCheckPoint(filepath=model_path+'temp/{}/inference_temp1.h5'.format(job_index), validation_y=y_val, 
                                  validation_x=[DX1_array_val, DX_mat_val, PR_mat_val, hosp_array_val, other_mat_val])
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=10, min_lr=K.epsilon())
-    earlystop = EarlyStopping(monitor='val_loss', patience=15)
+    earlystop = EarlyStopping(monitor='val_loss', patience=20)
     
     hist = model.fit([DX1_array_trn, DX_mat_trn, PR_mat_trn, hosp_array_trn, other_mat_trn], y_trn, 
                      batch_size=batchsize, epochs=50, callbacks=[checkpoint, reduce_lr, earlystop], 
@@ -274,7 +277,7 @@ for val_ind in range(n_val):
     y_pred = model.predict([DX1_array_tst, DX_mat_tst, PR_mat_tst, hosp_array_tst, other_mat_tst], verbose=0)
     fpr, tpr, _ = roc_curve(y_true, y_pred)
     roc_auc = auc(fpr, tpr)
-    model.save_weights(model_path+'testing/inf_group_{}{}{}_{}_{}.h5'.format(cohort, split_seed, train_idx, sample_seed, val_ind))
+    model.save_weights(model_path+'testing/split_hosp_{}{}{}_{}_{}.h5'.format(cohort, split_seed, train_idx, sample_seed, val_ind))
     auc_lst.append(roc_auc)
     y_pred_lst.append(y_pred)
     
@@ -282,6 +285,11 @@ for val_ind in range(n_val):
         hosp_array_index = np.repeat(hosp_dict[hosp], len(index_df))
         y_pred_index = model.predict([DX1_array_index, DX_mat_index, PR_mat_index, hosp_array_index, other_mat_index], verbose=0)
         recycle_pred[i, val_ind] = y_pred_index.mean()
+        
+    for l in model.layers:
+        if l.name=='hosp_embed':
+            hosp_embed_mat = (l.get_weights()[0])*(model.layers[-1].get_weights()[0][-1, 0])
+    hosp_embed_mats.append(hosp_embed_mat)
     
 y_pred_mat = np.column_stack(y_pred_lst)
 y_pred_df = pd.DataFrame(y_pred_mat, columns=['pred'+str(j) for j in range(n_val)])
@@ -292,9 +300,12 @@ fpr, tpr, _ = roc_curve(y_true, y_pred_avg)
 auc_avg = auc(fpr, tpr)
 auc_lst.append(auc_avg)
 auc_df = pd.DataFrame(np.array(auc_lst).reshape((1,n_val+1)), columns=['auc'+str(j) for j in range(n_val)]+['auc_avg'])
-auc_df.to_csv(path+'cohorts30/{}/inference/auc_group_{}{}_{}.csv'.format(cohort, split_seed, train_idx, sample_seed), index=False)
+auc_df.to_csv(path+'cohorts30/{}/inference/auc_hosp_{}{}_{}.csv'.format(cohort, split_seed, train_idx, sample_seed), index=False)
 
 recyc_df = pd.DataFrame(recycle_pred, columns=['recycle_pred'+str(j) for j in range(n_val)])
 recyc_df = recyc_df.assign(recyc_mean=recyc_df.mean(axis=1))
 recyc_df = recyc_df.assign(HOSP_NRD=hosp_cat)
-recyc_df.to_csv(path+'cohorts30/{}/inference/recyc_pred_group_{}{}_{}.csv'.format(cohort, split_seed, train_idx, sample_seed), index=False)
+recyc_df.to_csv(path+'cohorts30/{}/inference/recyc_pred_hosp_{}{}_{}.csv'.format(cohort, split_seed, train_idx, sample_seed), index=False)
+
+hosp_embed_mats = np.column_stack(hosp_embed_mats)
+np.save(path+'cohorts30/{}/inference/hosp_embed_mats_{}{}_{}.npy'.format(cohort, split_seed, train_idx, sample_seed), hosp_embed_mats)

@@ -1,5 +1,5 @@
 #### Some addons for keras ----
-
+import numpy as np
 from keras.preprocessing.image import *  
 import keras
 #from keras.utils import to_categorical
@@ -336,23 +336,26 @@ class ImageFrameGenerator(ImageDataGenerator):
             
 
 class AUCCheckPoint(keras.callbacks.Callback):
-    def __init__(self, filepath, validation_y, validation_x=None, validation_itr=None):
+    def __init__(self, filepath, validation_y, validation_x=None, validation_itr=None, auc_output_idx=None):
         self.filepath = filepath
         self.val_itr = validation_itr
         self.val_y = validation_y
         self.val_x = validation_x
+        self.auc_output_idx = auc_output_idx #the index of output who need to calculate AUC
                                 
     def on_train_begin(self, logs={}):
         #indicator for multi-ouput model
         if len(self.model.output_names)>1:
             self.multi_outputs = True
+            if self.auc_output_idx == None:
+                self.auc_output_idx = list(range(len(self.model.output_names)))
         else:
             self.multi_outputs = False
         #model output mode: could be categorical with 2 classes, usually for adding weights    
         if self.multi_outputs:
-            if self.model.output_shape[0][1]==1:
+            if self.model.output_shape[self.auc_output_idx[0]][1]==1: #here we assume the outputs have the same mode
                 self.output_mode = 'binary'
-            elif self.model.output_shape[0][1]==2:
+            elif self.model.output_shape[self.auc_output_idx[0]][1]==2:
                 self.output_mode = 'categorical'
             else:
                 raise ValueError('The model output must be binary or categorical with 2 classes!')
@@ -366,7 +369,7 @@ class AUCCheckPoint(keras.callbacks.Callback):
                 
         if self.multi_outputs:
             self.auc_history = {}
-            for output in self.model.output_names:
+            for output in [self.model.output_names[j] for j in self.auc_output_idx]:
                 self.auc_history[output] = []
         else:
             self.auc_history = []
@@ -385,13 +388,13 @@ class AUCCheckPoint(keras.callbacks.Callback):
             y_pred = self.model.predict(self.val_x)
             
         if self.multi_outputs:
-            if self.output_mode == 'binary':
-                y_pred = np.concatenate(y_pred, axis=1)
-            else:
-                y_pred = np.concatenate([y[:, 1].reshape((y.shape[0], 1)) for y in y_pred], axis=1) 
+            if self.output_mode == 'categorical':
+                y_pred = [y[:, 1] for y in y_pred]
+                val_y = [y[:, 1] for y in self.val_y]
             aucs = []
-            for i, output in enumerate(self.model.output_names):
-                auc = roc_auc_score(self.val_y[:, i], y_pred[:, i])
+            for j in self.auc_output_idx:
+                output = self.model.output_names[j]
+                auc = roc_auc_score(self.val_y[j], y_pred[j])
                 self.auc_history[output].append(auc)
                 print('AUC_'+output+': {:.4f}'.format(auc))
                 aucs.append(auc)    
@@ -400,6 +403,7 @@ class AUCCheckPoint(keras.callbacks.Callback):
         else:
             if self.output_mode=='categorical':
                 y_pred = y_pred[:, 1]
+                val_y = self.val_y[:, 1]
             auc_new = roc_auc_score(self.val_y, y_pred)
             self.auc_history.append(auc_new)
             print('AUC: {:.4f}\n'.format(auc_new))    
