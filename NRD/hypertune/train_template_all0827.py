@@ -234,10 +234,11 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
         hosp_embed = Embedding(input_dim=len(hosp_cat), output_dim=hosp_embed_dim, input_length=1)(input_hosp)
         hosp_embed = Reshape((hosp_embed_dim, ))(hosp_embed)
         input_other = Input(shape=(other_mat.shape[1], ))
-        merged = Concatenate(axis=1)([DX1_embed, DX_embed, PR_embed, hosp_embed, input_other])
+        merged = Concatenate(axis=1)([DX1_embed, DX_embed, PR_embed, input_other])
         x = Dense(fc_width, activation='relu')(merged)
         x = Dropout(dropout)(x)
-        prediction = Dense(1, activation='sigmoid')(x)
+        x = Concatenate(axis=1)([x, hosp_embed])
+        prediction = Dense(1, activation='sigmoid', name='prediction', use_bias=False)(x)
         model = Model(inputs=[input_DX1, input_DX, input_PR, input_hosp, input_other], outputs=prediction)
     else:
         input_DX1 = Input(shape=(1,))
@@ -281,7 +282,7 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
     #class_weight = {0:(Y_trn.shape[0]/sum(Y_trn[:, 0])), 1:(Y_trn.shape[0]/sum(Y_trn[:, 1]))}
     
     hist = model.fit([DX1_array_trn, DX_mat_trn, PR_mat_trn, hosp_array_trn, other_mat_trn], y_trn, 
-                     batch_size=batchsize, epochs=80, callbacks=[auccheckpoint, reduce_lr, earlystop], 
+                     batch_size=batchsize, epochs=50, callbacks=[auccheckpoint, reduce_lr, earlystop], 
                      validation_data=[[DX1_array_val, DX_mat_val, PR_mat_val, hosp_array_val, other_mat_val], y_val], 
                     verbose=2)
     
@@ -301,7 +302,7 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
     auccheckpoint = AUCCheckPoint(filepath=model_path+'ami_glove_auc_temp2_'+str(job_index)+'.h5', validation_y=y_val, 
                                  validation_x=[DX1_array_val, DX_mat_val, PR_mat_val, hosp_array_val, other_mat_val])
     hist = model.fit([DX1_array_trn, DX_mat_trn, PR_mat_trn, hosp_array_trn, other_mat_trn], y_trn, 
-                     batch_size=batchsize, epochs=30, callbacks=[auccheckpoint, reduce_lr, earlystop], 
+                     batch_size=batchsize, epochs=20, callbacks=[auccheckpoint, reduce_lr, earlystop], 
                      validation_data=[[DX1_array_val, DX_mat_val, PR_mat_val, hosp_array_val, other_mat_val], y_val], 
                     verbose=2)
     
@@ -311,7 +312,7 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
     #y_pred = y[:, 1]
     fpr, tpr, _ = roc_curve(y_true, y_pred)
     roc_auc = auc(fpr, tpr)
-    model.save_weights(model_path+'best30_{}{}_{}.h5'.format(cohort, tst_seed, val_seed))
+    model.save_weights(model_path+'best30_hosp_{}{}_{}.h5'.format(cohort, tst_seed, val_seed))
     auc_lst.append(roc_auc)
     y_pred_lst.append(y_pred)
     val_seed += 1
