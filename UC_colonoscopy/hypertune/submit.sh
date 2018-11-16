@@ -1,4 +1,4 @@
-qsub batch_gpu0.pbs
+#qsub batch_gpu0.pbs
 qsub batch_gpu1.pbs
 qsub batch_gpu2.pbs
 qsub batch_gpu3.pbs

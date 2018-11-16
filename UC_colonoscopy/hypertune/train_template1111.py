@@ -80,7 +80,7 @@ checkpointer = ModelCheckpoint(filepath=model_path+'binary3_valloss{}{}.h5'.form
 auccheckpt = AUCCheckPoint(filepath=model_path+'binary3_auc{}{}.h5'.format(tst_seed, val_seed), 
                            validation_y=val_df[['split0_123', 'split01_23', 'split012_3']].values,
                           validation_itr=val_itr)
-reduce_lr = ReduceLROnPlateau(monitor='loss', factor=0.2, patience=5, min_lr=K.epsilon())
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=15, min_lr=K.epsilon())
 earlystop = EarlyStopping(monitor='val_loss', patience=30)
 
 class_weight = {'split0_123':{0:len(trn_df)/sum(trn_df.split0_123==0), 1:len(trn_df)/sum(trn_df.split0_123==1)}, 
