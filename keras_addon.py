@@ -5,6 +5,7 @@ import keras
 #from keras.utils import to_categorical
 from sklearn.metrics import roc_auc_score
 from scipy.ndimage.interpolation import zoom
+from collections import defaultdict
 
 if keras.__version__<'2.1.5':
     from keras.preprocessing.image import _count_valid_files_in_directory
@@ -336,7 +337,7 @@ class ImageFrameGenerator(ImageDataGenerator):
             
 
 class AUCCheckPoint(keras.callbacks.Callback):
-    def __init__(self, filepath, validation_y, validation_x=None, validation_itr=None, auc_output_idx=None):
+    def __init__(self, filepath, validation_y=None, validation_x=None, validation_itr=None, auc_output_idx=None):
         self.filepath = filepath
         self.val_itr = validation_itr
         self.val_y = validation_y
@@ -344,6 +345,20 @@ class AUCCheckPoint(keras.callbacks.Callback):
         self.auc_output_idx = auc_output_idx #the index of output who need to calculate AUC
                                 
     def on_train_begin(self, logs={}):
+        #if initialized by image frame iterator, generate the val_y as a defaultdict first:
+        if self.val_y==None:
+            self.val_y = defaultdict(list)
+            n_done=0
+            for _, y in self.val_itr:
+                if n_done>=self.val_itr.n:
+                    break
+                for n in self.model.output_names:
+                    self.val_y[n].append(y[n])
+                n_done += self.val_itr.batch_size
+            self.val_itr.reset()
+            for n in self.model.output_names:
+                self.val_y[n] = np.concatenate(self.val_y[n])
+            self.val_y = [self.val_y[n] for n in self.model.output_names]
         #indicator for multi-ouput model
         if len(self.model.output_names)>1:
             self.multi_outputs = True
@@ -394,7 +409,7 @@ class AUCCheckPoint(keras.callbacks.Callback):
             aucs = []
             for j in self.auc_output_idx:
                 output = self.model.output_names[j]
-                auc = roc_auc_score(self.val_y[j], y_pred[j])
+                auc = roc_auc_score(val_y[j], y_pred[j])
                 self.auc_history[output].append(auc)
                 print('AUC_'+output+': {:.4f}'.format(auc))
                 aucs.append(auc)    
@@ -404,7 +419,7 @@ class AUCCheckPoint(keras.callbacks.Callback):
             if self.output_mode=='categorical':
                 y_pred = y_pred[:, 1]
                 val_y = self.val_y[:, 1]
-            auc_new = roc_auc_score(self.val_y, y_pred)
+            auc_new = roc_auc_score(val_y, y_pred)
             self.auc_history.append(auc_new)
             print('AUC: {:.4f}\n'.format(auc_new))    
  

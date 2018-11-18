@@ -75,17 +75,15 @@ model = Model(inputs=base_model.input, outputs=[output1, output2, output3])
 adam = Adam()
 model.compile(optimizer=adam, loss='categorical_crossentropy')
 
-checkpointer = ModelCheckpoint(filepath=model_path+'binary3_valloss{}{}.h5'.format(tst_seed, val_seed), verbose=0, save_best_only=True, 
+checkpointer = ModelCheckpoint(filepath=model_path+'weighted_valloss{}{}.h5'.format(tst_seed, val_seed), verbose=0, save_best_only=True, 
                                save_weights_only=True)
-auccheckpt = AUCCheckPoint(filepath=model_path+'binary3_auc{}{}.h5'.format(tst_seed, val_seed), 
-                           validation_y=val_df[['split0_123', 'split01_23', 'split012_3']].values,
-                          validation_itr=val_itr)
+auccheckpt = AUCCheckPoint(filepath=model_path+'weighted_auc{}{}.h5'.format(tst_seed, val_seed), validation_itr=val_itr)
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=15, min_lr=K.epsilon())
 earlystop = EarlyStopping(monitor='val_loss', patience=30)
 
-class_weight = {'split0_123':{0:len(trn_df)/sum(trn_df.split0_123==0), 1:len(trn_df)/sum(trn_df.split0_123==1)}, 
-               'split01_23':{0:len(trn_df)/sum(trn_df.split01_23==0), 1:len(trn_df)/sum(trn_df.split01_23==1)}, 
-               'split012_3':{0:len(trn_df)/sum(trn_df.split012_3==0), 1:len(trn_df)/sum(trn_df.split012_3==1)}}
+class_weight = {'split0_123':{0:sum(trn_df.split0_123==1)/len(trn_df), 1:sum(trn_df.split0_123==0)/len(trn_df)}, 
+               'split01_23':{0:sum(trn_df.split01_23==1)/len(trn_df)*2, 1:sum(trn_df.split01_23==0)/len(trn_df)*2}, 
+               'split012_3':{0:sum(trn_df.split012_3==1)/len(trn_df), 1:sum(trn_df.split012_3==0)/len(trn_df)}}
 
 hist = model.fit_generator(trn_itr, steps_per_epoch=trn_itr.n // batch_size, epochs=200, 
                               validation_data=val_itr, validation_steps=val_itr.n // batch_size, 

@@ -1,0 +1,58 @@
+nyx7503
+2018-11-16 11:31:09.762126: I tensorflow/core/platform/cpu_feature_guard.cc:137] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX
+2018-11-16 11:31:10.088182: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1030] Found device 0 with properties: 
+name: Tesla K20Xm major: 3 minor: 5 memoryClockRate(GHz): 0.732
+pciBusID: 0000:0e:00.0
+totalMemory: 5.57GiB freeMemory: 5.49GiB
+2018-11-16 11:31:10.088247: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1120] Creating TensorFlow device (/device:GPU:0) -> (device: 0, name: Tesla K20Xm, pci bus id: 0000:0e:00.0, compute capability: 3.5)
+Using TensorFlow backend.
+Found 16514 images in the directory.
+Using split0_123 as categorical label, with levels: {0: 0, 1: 1}
+Using split01_23 as categorical label, with levels: {0: 0, 1: 1}
+Using split012_3 as categorical label, with levels: {0: 0, 1: 1}
+Using 1652 images to generate mini-batches.
+Found 16514 images in the directory.
+Using split0_123 as categorical label, with levels: {0: 0, 1: 1}
+Using split01_23 as categorical label, with levels: {0: 0, 1: 1}
+Using split012_3 as categorical label, with levels: {0: 0, 1: 1}
+Using 1652 images to generate mini-batches.
+Found 16514 images in the directory.
+Using split0_123 as categorical label, with levels: {0: 0, 1: 1}
+Using split01_23 as categorical label, with levels: {0: 0, 1: 1}
+Using split012_3 as categorical label, with levels: {0: 0, 1: 1}
+Using 1652 images to generate mini-batches.
+Found 16514 images in the directory.
+Using split0_123 as categorical label, with levels: {0: 0, 1: 1}
+Using split01_23 as categorical label, with levels: {0: 0, 1: 1}
+Using split012_3 as categorical label, with levels: {0: 0, 1: 1}
+Using 1652 images to generate mini-batches.
+Found 16514 images in the directory.
+Using split0_123 as categorical label, with levels: {0: 0, 1: 1}
+Using split01_23 as categorical label, with levels: {0: 0, 1: 1}
+Using split012_3 as categorical label, with levels: {0: 0, 1: 1}
+Using 1651 images to generate mini-batches.
+Found 16514 images in the directory.
+Using split0_123 as categorical label, with levels: {0: 0, 1: 1}
+Using split01_23 as categorical label, with levels: {0: 0, 1: 1}
+Using split012_3 as categorical label, with levels: {0: 0, 1: 1}
+Using 1651 images to generate mini-batches.
+Found 16514 images in the directory.
+Using split0_123 as categorical label, with levels: {0: 0, 1: 1}
+Using split01_23 as categorical label, with levels: {0: 0, 1: 1}
+Using split012_3 as categorical label, with levels: {0: 0, 1: 1}
+Using 1651 images to generate mini-batches.
+Found 16514 images in the directory.
+Using split0_123 as categorical label, with levels: {0: 0, 1: 1}
+Using split01_23 as categorical label, with levels: {0: 0, 1: 1}
+Using split012_3 as categorical label, with levels: {0: 0, 1: 1}
+Using 1651 images to generate mini-batches.
+Found 16514 images in the directory.
+Using split0_123 as categorical label, with levels: {0: 0, 1: 1}
+Using split01_23 as categorical label, with levels: {0: 0, 1: 1}
+Using split012_3 as categorical label, with levels: {0: 0, 1: 1}
+Using 1651 images to generate mini-batches.
+Found 16514 images in the directory.
+Using split0_123 as categorical label, with levels: {0: 0, 1: 1}
+Using split01_23 as categorical label, with levels: {0: 0, 1: 1}
+Using split012_3 as categorical label, with levels: {0: 0, 1: 1}
+Using 1651 images to generate mini-batches.
