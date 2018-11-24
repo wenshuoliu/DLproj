@@ -338,21 +338,22 @@ class SkipgramRegularization(Layer):
         n_codes = labels_in.shape[1]
         for i in range(n_codes):
             inputs = tf.gather(inputs_in, i, axis=1)
-            for j in range(i+1, n_codes):
-                labels = tf.gather(labels_in, [j], axis=1)
-                loss = tf.nn.sampled_softmax_loss(
-                        weights = self.kernel,
-                        biases = self.bias,
-                        labels = labels,
-                        inputs = inputs,
-                        num_sampled=self.num_samples,
-                        num_classes=self.num_classes,
-                        num_true=1)
-                labels_i = tf.gather(labels_in, [i], axis=1)
-                condition = tf.logical_or(tf.equal(labels, np.float32(0.)), tf.equal(labels_i, np.float32(0.)))
-                total_loss += loss*tf.to_float(tf.logical_not(condition))
-                
-        cost = self.lamb*tf.reduce_mean(loss)
+            for j in range(n_codes):
+                if not i==j:
+                    labels = tf.gather(labels_in, [j], axis=1)
+                    loss = tf.nn.sampled_softmax_loss(
+                            weights = self.kernel,
+                            biases = self.bias,
+                            labels = labels,
+                            inputs = inputs,
+                            num_sampled=self.num_samples,
+                            num_classes=self.num_classes,
+                            num_true=1)
+                    labels_i = tf.gather(labels_in, [i], axis=1)
+                    condition = tf.logical_or(tf.equal(labels, np.float32(0.)), tf.equal(labels_i, np.float32(0.)))
+                    total_loss += loss*tf.to_float(tf.logical_not(condition))
+        n_nonzero = tf.count_nonzero(total_loss)        
+        cost = self.lamb*tf.reduce_sum(total_loss)/tf.cast(n_nonzero, tf.float32)
         self.add_loss(cost,x)
         #you can output whatever you need, just update output_shape adequately
         #But this is probably useful

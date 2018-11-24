@@ -346,7 +346,7 @@ class AUCCheckPoint(keras.callbacks.Callback):
                                 
     def on_train_begin(self, logs={}):
         #if initialized by image frame iterator, generate the val_y as a defaultdict first:
-        if self.val_y==None:
+        if self.val_y is None:
             self.val_y = defaultdict(list)
             n_done=0
             for _, y in self.val_itr:
@@ -418,7 +418,8 @@ class AUCCheckPoint(keras.callbacks.Callback):
         else:
             if self.output_mode=='categorical':
                 y_pred = y_pred[:, 1]
-                self.val_y = self.val_y[:, 1]
+                if len(self.val_y.shape)>1:
+                    self.val_y = self.val_y[:, 1]
             auc_new = roc_auc_score(self.val_y, y_pred)
             self.auc_history.append(auc_new)
             print('AUC: {:.4f}\n'.format(auc_new))    
