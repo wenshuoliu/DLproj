@@ -1,6 +1,9 @@
+import numpy as np
 import keras.backend as K
 from keras.engine.topology import InputSpec, Layer
 from keras import activations, initializers, regularizers, constraints
+from keras import objectives
+import tensorflow as tf
 
 class SetSum(Layer):
     """The DeepSet operation: apply a dense layer on the last axis, and then do a masked sum on axis=1. 
@@ -298,3 +301,64 @@ class MaskedDense(Layer):
         }
         base_config = super(Dense, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
+    
+##complete one
+
+
+def zero_loss(y_true, y_pred):
+    return K.zeros_like(y_pred)
+
+
+class SkipgramRegularization(Layer):
+    """Layer written by Wenyi to do dynamic training with skipgram. 
+    """
+    def __init__(self, num_samples, num_classes, lamb, **kwargs):
+        self.num_samples = num_samples #number of netagive sample
+        self.num_classes = num_classes #number of code categories
+        self.lamb = lamb #tuning parameter to control the weight between skipgram and prediction model
+        super(SkipgramRegularization, self).__init__(**kwargs)
+        
+    def build(self, input_shape):
+        dense_shape, classes_shape = input_shape
+        self.kernel = self.add_weight(name='kernel',
+                                      shape=(self.num_classes, dense_shape[2]),
+                                      initializer='uniform',
+                                      trainable=True)
+        self.bias = self.add_weight(name='bias',
+                                    shape=(self.num_classes,),
+                                    initializer='uniform',
+                                    trainable=True) 
+        super(SkipgramRegularization, self).build(input_shape)
+
+    def call(self,x):
+        inputs_in, labels_in = x
+        inputs_in = tf.cast(inputs_in, tf.float32)
+        labels_in = tf.cast(labels_in, tf.float32)
+        total_loss = 0
+        n_codes = labels_in.shape[1]
+        for i in range(n_codes):
+            inputs = tf.gather(inputs_in, i, axis=1)
+            for j in range(n_codes):
+                if not i==j:
+                    labels = tf.gather(labels_in, [j], axis=1)
+                    loss = tf.nn.sampled_softmax_loss(
+                            weights = self.kernel,
+                            biases = self.bias,
+                            labels = labels,
+                            inputs = inputs,
+                            num_sampled=self.num_samples,
+                            num_classes=self.num_classes,
+                            num_true=1)
+                    labels_i = tf.gather(labels_in, [i], axis=1)
+                    condition = tf.logical_or(tf.equal(labels, np.float32(0.)), tf.equal(labels_i, np.float32(0.)))
+                    total_loss += loss*tf.to_float(tf.logical_not(condition))
+        n_nonzero = tf.count_nonzero(total_loss)        
+        cost = self.lamb*tf.reduce_sum(total_loss)/tf.cast(n_nonzero, tf.float32)
+        self.add_loss(cost,x)
+        #you can output whatever you need, just update output_shape adequately
+        #But this is probably useful
+        return cost
+
+    def compute_output_shape(self, input_shape):
+        dense_shape,classes_shape = input_shape
+        return (dense_shape[0],)

@@ -7,6 +7,6 @@ qsub batch_gpu5.pbs
 qsub batch_gpu6.pbs
 qsub batch_gpu7.pbs
 qsub batch_gpu8.pbs
-#qsub batch_gpu9.pbs
+qsub batch_gpu9.pbs
 #qsub batch_gpu10.pbs
 #qsub batch_gpu11.pbs
