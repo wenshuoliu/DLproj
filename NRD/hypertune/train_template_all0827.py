@@ -140,7 +140,7 @@ los_array_tst = (tst_df.LOS.values - los_mean)/los_std
 ed_mat_tst = to_categorical(tst_df.HCUP_ED.values, num_classes=n_ed)
 zipinc_mat_tst = to_categorical(tst_df.ZIPINC_QRTL.values, num_classes=n_zipinc)[:, 1:]
 #transfer_mat_tst = to_categorical(tst_df.SAMEDAYEVENT.values)
-other_mat_tst = np.concatenate((demo_mat_tst, pay1_mat_tst, los_array_tst.reshape(los_array_tst.shape+(1,)), 
+other_mat_tst = np.concatenate((pay1_mat_tst, los_array_tst.reshape(los_array_tst.shape+(1,)), 
                                 ed_mat_tst, zipinc_mat_tst), axis=1)
 y_true = tst_df.readm30.astype(int).values
 
@@ -195,13 +195,15 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
     
     demo_mat = train_df[['AGE', 'FEMALE']].values
     demo_mat[:, 0] = (demo_mat[:, 0]-age_mean)/age_std
+    demo_mat_trn = demo_mat[:N_trn, ]
+    demo_mat_val = demo_mat[N_trn:, ]
     pay1_mat = to_categorical(train_df.PAY1.values, num_classes=n_pay1)[:, 1:]
     los_array = train_df.LOS.values
     los_array = (los_array - los_mean)/los_std
     ed_mat = to_categorical(train_df.HCUP_ED.values, num_classes=n_ed)
     zipinc_mat = to_categorical(train_df.ZIPINC_QRTL.values, num_classes=n_zipinc)[:, 1:]
     #transfer_mat = to_categorical(train_df.SAMEDAYEVENT.values)
-    other_mat = np.concatenate((demo_mat, pay1_mat, los_array.reshape(los_array.shape+(1,)), ed_mat, zipinc_mat), axis=1)
+    other_mat = np.concatenate((pay1_mat, los_array.reshape(los_array.shape+(1,)), ed_mat, zipinc_mat), axis=1)
     other_mat_trn = other_mat[:N_trn, ]
     other_mat_val = other_mat[N_trn:, ]
     
@@ -212,7 +214,49 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
     Y_val = to_categorical(y_val)
     
     # model building 
-    if model_name=='permutate_hosp':
+    if model_name=='demo':
+        input_demo = Input(shape=(demo_mat.shape[1],))
+        x = Dense(fc_width, activation='relu')(input_demo)
+        x = Dropout(dropout)(x)
+        prediction = Dense(2, activation='softmax', name='prediction')(x)
+        model = Model(inputs=[input_demo], outputs=prediction)
+        X_trn = [demo_mat_trn]
+        X_val = [demo_mat_val]
+        X_tst = [demo_mat_tst]
+    elif model_name=='demo_dx1':
+        input_DX1 = Input(shape=(1,))
+        DX1_embed = Embedding(input_dim=n_code_cat, output_dim=code_embed_dim, embeddings_initializer=embed_initializer, 
+                             name='DX1_embed')(input_DX1)
+        DX1_embed = Reshape((code_embed_dim,))(DX1_embed)
+        input_demo = Input(shape=(demo_mat.shape[1], ))
+        merged = Concatenate(axis=1)([DX1_embed, input_demo])
+        x = Dense(fc_width, activation='relu')(merged)
+        x = Dropout(dropout)(x)
+        prediction = Dense(2, activation='softmax', name='prediction')(x)
+        model = Model(inputs=[input_DX1, input_demo], outputs=prediction)
+        X_trn = [DX1_array_trn, demo_mat_trn]
+        X_val = [DX1_array_val, demo_mat_val]
+        X_tst = [DX1_array_tst, demo_mat_tst]
+    elif model_name=='demo_dx1_dx':
+        input_DX1 = Input(shape=(1,))
+        DX1_embed = Embedding(input_dim=n_code_cat, output_dim=code_embed_dim, embeddings_initializer=embed_initializer, 
+                             name='DX1_embed')(input_DX1)
+        DX1_embed = Reshape((code_embed_dim,))(DX1_embed)
+        input_DX = Input(shape = (n_DX,))
+        DX_embed = Embedding(input_dim=n_code_cat, output_dim=code_embed_dim, mask_zero=True, embeddings_initializer=embed_initializer, 
+                             name='DX_embed')(input_DX)
+        DX_embed = MaskedDense(md_width, activation='relu')(DX_embed)
+        DX_embed = MaskedSum()(DX_embed)
+        input_demo = Input(shape=(demo_mat.shape[1], ))
+        merged = Concatenate(axis=1)([DX1_embed, DX_embed, input_demo])
+        x = Dense(fc_width, activation='relu')(merged)
+        x = Dropout(dropout)(x)
+        prediction = Dense(2, activation='softmax', name='prediction')(x)
+        model = Model(inputs=[input_DX1, input_DX, input_demo], outputs=prediction)
+        X_trn = [DX1_array_trn, DX_mat_trn, demo_mat_trn]
+        X_val = [DX1_array_val, DX_mat_val, demo_mat_val]
+        X_tst = [DX1_array_tst, DX_mat_tst, demo_mat_tst]
+    elif model_name=='demo_dx1_dx_pr':
         input_DX1 = Input(shape=(1,))
         DX1_embed = Embedding(input_dim=n_code_cat, output_dim=code_embed_dim, embeddings_initializer=embed_initializer, 
                              name='DX1_embed')(input_DX1)
@@ -227,102 +271,16 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
                              name='PR_embed')(input_PR)
         PR_embed = MaskedDense(md_width, activation='relu')(PR_embed)
         PR_embed = MaskedSum()(PR_embed)
-        input_hosp = Input(shape=(1,))
-        hosp_embed = Embedding(input_dim=len(hosp_cat), output_dim=hosp_embed_dim, input_length=1)(input_hosp)
-        hosp_embed = Reshape((hosp_embed_dim, ))(hosp_embed)
-        input_other = Input(shape=(other_mat.shape[1], ))
-        merged = Concatenate(axis=1)([DX1_embed, DX_embed, PR_embed, input_other])
+        input_demo = Input(shape=(demo_mat.shape[1], ))
+        merged = Concatenate(axis=1)([DX1_embed, DX_embed, PR_embed, input_demo])
         x = Dense(fc_width, activation='relu')(merged)
         x = Dropout(dropout)(x)
-        x = Concatenate(axis=1)([x, hosp_embed])
         prediction = Dense(2, activation='softmax', name='prediction')(x)
-        model = Model(inputs=[input_DX1, input_DX, input_PR, input_hosp, input_other], outputs=prediction)
-    elif model_name=='no_mask':
-        input_DX1 = Input(shape=(1,))
-        DX1_embed = Embedding(input_dim=n_code_cat, output_dim=code_embed_dim, embeddings_initializer=embed_initializer, 
-                             name='DX1_embed')(input_DX1)
-        DX1_embed = Reshape((code_embed_dim,))(DX1_embed)
-        input_DX = Input(shape = (n_DX,))
-        DX_embed = Embedding(input_dim=n_code_cat, output_dim=code_embed_dim, mask_zero=False, embeddings_initializer=embed_initializer, 
-                             name='DX_embed')(input_DX)
-        DX_embed = Dense(md_width, activation='relu')(DX_embed)
-        DX_embed = Lambda(lambda x:K.sum(x, axis=1))(DX_embed)
-        input_PR = Input(shape = (n_PR,))
-        PR_embed = Embedding(input_dim=n_code_cat, output_dim=code_embed_dim, mask_zero=False, embeddings_initializer=embed_initializer,
-                             name='PR_embed')(input_PR)
-        PR_embed = Dense(md_width, activation='relu')(PR_embed)
-        PR_embed = Lambda(lambda x:K.sum(x, axis=1))(PR_embed)
-        input_hosp = Input(shape=(1,))
-        hosp_embed = Embedding(input_dim=len(hosp_cat), output_dim=hosp_embed_dim, input_length=1)(input_hosp)
-        hosp_embed = Reshape((hosp_embed_dim, ))(hosp_embed)
-        input_other = Input(shape=(other_mat.shape[1], ))
-        merged = Concatenate(axis=1)([DX1_embed, DX_embed, PR_embed, input_other])
-        x = Dense(fc_width, activation='relu')(merged)
-        x = Dropout(dropout)(x)
-        x = Concatenate(axis=1)([x, hosp_embed])
-        prediction = Dense(2, activation='softmax', name='prediction')(x)
-        model = Model(inputs=[input_DX1, input_DX, input_PR, input_hosp, input_other], outputs=prediction)
-    elif model_name=='dense_rho':
-        input_DX1 = Input(shape=(1,))
-        DX1_embed = Embedding(input_dim=n_code_cat, output_dim=code_embed_dim, embeddings_initializer=embed_initializer, 
-                             name='DX1_embed')(input_DX1)
-        DX1_embed = Reshape((code_embed_dim,))(DX1_embed)
-        DX1_embed = Dense(rho_width, activation='relu')(DX1_embed)
-        input_DX = Input(shape = (n_DX,))
-        DX_embed = Embedding(input_dim=n_code_cat, output_dim=code_embed_dim, mask_zero=True, embeddings_initializer=embed_initializer, 
-                             name='DX_embed')(input_DX)
-        DX_embed = MaskedDense(md_width, activation='relu')(DX_embed)
-        DX_embed = MaskedSum()(DX_embed)
-        DX_embed = Dense(rho_width, activation='relu')(DX_embed)
-        input_PR = Input(shape = (n_PR,))
-        PR_embed = Embedding(input_dim=n_code_cat, output_dim=code_embed_dim, mask_zero=True, embeddings_initializer=embed_initializer,
-                             name='PR_embed')(input_PR)
-        PR_embed = MaskedDense(md_width, activation='relu')(PR_embed)
-        PR_embed = MaskedSum()(PR_embed)
-        PR_embed = Dense(rho_width, activation='relu')(PR_embed)
-        input_hosp = Input(shape=(1,))
-        hosp_embed = Embedding(input_dim=len(hosp_cat), output_dim=hosp_embed_dim, input_length=1)(input_hosp)
-        hosp_embed = Reshape((hosp_embed_dim, ))(hosp_embed)
-        input_other = Input(shape=(other_mat.shape[1], ))
-        merged = Concatenate(axis=1)([DX1_embed, DX_embed, PR_embed, input_other])
-        x = Dense(fc_width, activation='relu')(merged)
-        x = Dropout(dropout)(x)
-        x = Concatenate(axis=1)([x, hosp_embed])
-        prediction = Dense(2, activation='softmax', name='prediction')(x)
-        model = Model(inputs=[input_DX1, input_DX, input_PR, input_hosp, input_other], outputs=prediction)
-    elif model_name=='batchnorm':
-        input_DX1 = Input(shape=(1,))
-        DX1_embed = Embedding(input_dim=n_code_cat, output_dim=code_embed_dim, embeddings_initializer=embed_initializer, 
-                             name='DX1_embed')(input_DX1)
-        DX1_embed = Reshape((code_embed_dim,))(DX1_embed)
-        input_DX = Input(shape = (n_DX,))
-        DX_embed = Embedding(input_dim=n_code_cat, output_dim=code_embed_dim, mask_zero=True, embeddings_initializer=embed_initializer, 
-                             name='DX_embed')(input_DX)
-        DX_embed = MaskedDense(md_width)(DX_embed)
-        DX_embed = BatchNormalization()(DX_embed)
-        DX_embed = Activation('relu')(DX_embed)
-        DX_embed = MaskedSum()(DX_embed)
-        input_PR = Input(shape = (n_PR,))
-        PR_embed = Embedding(input_dim=n_code_cat, output_dim=code_embed_dim, mask_zero=True, embeddings_initializer=embed_initializer,
-                             name='PR_embed')(input_PR)
-        PR_embed = MaskedDense(md_width)(PR_embed)
-        PR_embed = BatchNormalization()(PR_embed)
-        PR_embed = Activation('relu')(PR_embed)
-        PR_embed = MaskedSum()(PR_embed)
-        input_hosp = Input(shape=(1,))
-        hosp_embed = Embedding(input_dim=len(hosp_cat), output_dim=hosp_embed_dim, input_length=1)(input_hosp)
-        hosp_embed = Reshape((hosp_embed_dim, ))(hosp_embed)
-        input_other = Input(shape=(other_mat.shape[1], ))
-        merged = Concatenate(axis=1)([DX1_embed, DX_embed, PR_embed, input_other])
-        x = Dense(fc_width)(merged)
-        x = BatchNormalization()(x)
-        x = Activation('relu')(x)
-        x = Concatenate(axis=1)([x, hosp_embed])
-        prediction = Dense(2, activation='softmax', name='prediction')(x)
-        model = Model(inputs=[input_DX1, input_DX, input_PR, input_hosp, input_other], outputs=prediction)
-        
-      
-    
+        model = Model(inputs=[input_DX1, input_DX, input_PR, input_demo], outputs=prediction)
+        X_trn = [DX1_array_trn, DX_mat_trn, PR_mat_trn, demo_mat_trn]
+        X_val = [DX1_array_val, DX_mat_val, PR_mat_val, demo_mat_val]
+        X_tst = [DX1_array_tst, DX_mat_tst, PR_mat_tst, demo_mat_tst]
+          
     for l in model.layers:
         if l.name=='DX_embed' or l.name=='PR_embed' or l.name=='DX1_embed':
             l.trainable = False
@@ -331,19 +289,17 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
     model.compile(optimizer=adam, loss='binary_crossentropy')
     
     auccheckpoint = AUCCheckPoint(filepath=model_path+'ami_glove_auc_temp1_'+str(job_index)+'.h5', validation_y=Y_val, 
-                                 validation_x=[DX1_array_val, DX_mat_val, PR_mat_val, hosp_array_val, other_mat_val])
+                                 validation_x=X_val)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=10, min_lr=K.epsilon())
     earlystop = EarlyStopping(monitor='val_loss', patience=20)
     
-    #class_weight = {0:(Y_trn.shape[0]/sum(Y_trn[:, 0])), 1:(Y_trn.shape[0]/sum(Y_trn[:, 1]))}
-    
-    hist = model.fit([DX1_array_trn, DX_mat_trn, PR_mat_trn, hosp_array_trn, other_mat_trn], Y_trn, 
-                     batch_size=batchsize, epochs=50, callbacks=[auccheckpoint, reduce_lr, earlystop], 
-                     validation_data=[[DX1_array_val, DX_mat_val, PR_mat_val, hosp_array_val, other_mat_val], Y_val], 
-                    verbose=2)
+    class_weight = {0:(Y_trn.shape[0]/sum(Y_trn[:, 0])), 1:(Y_trn.shape[0]/sum(Y_trn[:, 1]))}
+        
+    hist = model.fit(X_trn, Y_trn, batch_size=batchsize, epochs=50, callbacks=[auccheckpoint, reduce_lr, earlystop], 
+                     validation_data=[X_val, Y_val], verbose=2)
     
     model.load_weights(model_path+'ami_glove_auc_temp1_'+str(job_index)+'.h5')
-    y = model.predict([DX1_array_tst, DX_mat_tst, PR_mat_tst, hosp_array_tst, other_mat_tst], verbose=0)
+    y = model.predict(X_tst, verbose=0)
     y_pred = y[:, 1]
     fpr, tpr, _ = roc_curve(y_true, y_pred)
     roc_auc = auc(fpr, tpr)
@@ -356,15 +312,13 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
     model.compile(optimizer=adam, loss='binary_crossentropy')
     
     auccheckpoint = AUCCheckPoint(filepath=model_path+'ami_glove_auc_temp2_'+str(job_index)+'.h5', validation_y=Y_val, 
-                                 validation_x=[DX1_array_val, DX_mat_val, PR_mat_val, hosp_array_val, other_mat_val])
-    hist = model.fit([DX1_array_trn, DX_mat_trn, PR_mat_trn, hosp_array_trn, other_mat_trn], Y_trn, 
-                     batch_size=batchsize, epochs=20, callbacks=[auccheckpoint, reduce_lr, earlystop], 
-                     validation_data=[[DX1_array_val, DX_mat_val, PR_mat_val, hosp_array_val, other_mat_val], Y_val], 
-                    verbose=2)
+                                 validation_x=X_val)
+    hist = model.fit(X_trn, Y_trn, batch_size=batchsize, epochs=20, callbacks=[auccheckpoint, reduce_lr, earlystop], 
+                     validation_data=[X_val, Y_val], verbose=2)
     
     model.load_weights(model_path+'ami_glove_auc_temp2_'+str(job_index)+'.h5')
     
-    y = model.predict([DX1_array_tst, DX_mat_tst, PR_mat_tst, hosp_array_tst, other_mat_tst], verbose=0)
+    y = model.predict(X_tst, verbose=0)
     y_pred = y[:, 1]
     fpr, tpr, _ = roc_curve(y_true, y_pred)
     roc_auc = auc(fpr, tpr)

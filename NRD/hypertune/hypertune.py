@@ -6,13 +6,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_curve, auc
 import statsmodels.stats.api as sms
 
-model_names = ['dense_rho']
+model_names = ['demo', 'demo_dx1', 'demo_dx1_dx', 'demo_dx1_dx_pr']
 code_embed_dims = [200]
 fc_widths = [512]
 md_widths = [128]
 lr1s = [2e-4]
 lr2s = [2e-5]
-dropouts = [0, 0.3]
+dropouts = [0.3]
 batchsizes = [256]
 penalties = [0.]
 count_caps = [20]
@@ -26,8 +26,8 @@ zips = [(embed_dim, tst_fold, cohort,
 #zips = zips + [(embed_dim, tst_fold, '') for embed_dim in code_embed_dims for tst_fold in tst_seeds]
 sep_dx1s = [1]
 val_folds = [7]
-rho_widths = [16, 32, 64]
-result_files = ['output/ht_result1121_{}.csv']
+rho_widths = [16]
+result_files = ['output/ht_result1123_{}.csv']
 
 para_itr = itertools.product(model_names, fc_widths, md_widths, lr1s, lr2s, dropouts, batchsizes, zips, sep_dx1s, 
                              val_folds, rho_widths, result_files)

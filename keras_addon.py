@@ -403,13 +403,16 @@ class AUCCheckPoint(keras.callbacks.Callback):
             y_pred = self.model.predict(self.val_x)
             
         if self.multi_outputs:
-            if self.output_mode == 'categorical':
-                y_pred = [y[:, 1] for y in y_pred]
-                self.val_y = [y[:, 1] for y in self.val_y]
             aucs = []
             for j in self.auc_output_idx:
+                if self.output_mode == 'categorical':
+                    y_predj = y_pred[j][:, 1]
+                    val_yj = self.val_y[j][:, 1]
+                else:
+                    y_predj = y_pred[j]
+                    val_yj = self.val_y[j]
                 output = self.model.output_names[j]
-                auc = roc_auc_score(self.val_y[j], y_pred[j])
+                auc = roc_auc_score(val_yj, y_predj)
                 self.auc_history[output].append(auc)
                 print('AUC_'+output+': {:.4f}'.format(auc))
                 aucs.append(auc)    
