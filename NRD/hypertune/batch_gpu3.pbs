@@ -12,7 +12,7 @@
 #PBS -q fluxg
 
 #PBS -V
-#PBS -l nodes=1:gpus=1,mem=6gb,walltime=48:00:00
+#PBS -l nodes=1:gpus=1:k40x,mem=8gb,walltime=48:00:00
 #PBS -j oe
 
 #### End PBS preamble

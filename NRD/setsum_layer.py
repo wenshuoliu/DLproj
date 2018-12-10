@@ -316,12 +316,13 @@ class SkipgramRegularization(Layer):
         self.num_samples = num_samples #number of netagive sample
         self.num_classes = num_classes #number of code categories
         self.lamb = lamb #tuning parameter to control the weight between skipgram and prediction model
+        self.supports_masking = True
         super(SkipgramRegularization, self).__init__(**kwargs)
         
     def build(self, input_shape):
-        dense_shape, classes_shape = input_shape
+        dx0_shape, dx_shape,pr_shape, label_flatten_shape,input_conditions_shape = input_shape
         self.kernel = self.add_weight(name='kernel',
-                                      shape=(self.num_classes, dense_shape[2]),
+                                      shape=(self.num_classes, dx0_shape[2]),
                                       initializer='uniform',
                                       trainable=True)
         self.bias = self.add_weight(name='bias',
@@ -331,34 +332,35 @@ class SkipgramRegularization(Layer):
         super(SkipgramRegularization, self).build(input_shape)
 
     def call(self,x):
-        inputs_in, labels_in = x
+        dx0_embed, dx_embed, pr_embed, labels_flatten,input_conditions = x
+        inputs_in = tf.concat([dx0_embed,dx_embed,pr_embed],axis=1)
         inputs_in = tf.cast(inputs_in, tf.float32)
-        labels_in = tf.cast(labels_in, tf.float32)
+        #labels_in1 = tf.cast(labels_in, tf.float32)
         total_loss = 0
-        n_codes = labels_in.shape[1]
-        for i in range(n_codes):
-            inputs = tf.gather(inputs_in, i, axis=1)
-            for j in range(n_codes):
-                if not i==j:
-                    labels = tf.gather(labels_in, [j], axis=1)
-                    loss = tf.nn.sampled_softmax_loss(
-                            weights = self.kernel,
-                            biases = self.bias,
-                            labels = labels,
-                            inputs = inputs,
-                            num_sampled=self.num_samples,
-                            num_classes=self.num_classes,
-                            num_true=1)
-                    labels_i = tf.gather(labels_in, [i], axis=1)
-                    condition = tf.logical_or(tf.equal(labels, np.float32(0.)), tf.equal(labels_i, np.float32(0.)))
-                    total_loss += loss*tf.to_float(tf.logical_not(condition))
-        n_nonzero = tf.count_nonzero(total_loss)        
-        cost = self.lamb*tf.reduce_sum(total_loss)/tf.cast(n_nonzero, tf.float32)
+        n_codes = 2
+        #labels_in = tf.gather(labels_flatten,list(np.arange(0,45)),axis=1)
+        inputs_in = tf.concat([tf.tile(dx0_embed,[1,45,1]),tf.tile(dx_embed,[1,45,1]),tf.tile(pr_embed,[1,45,1])],axis=1)
+        inputs_reshape = tf.reshape(inputs_in,[-1,dx_embed.shape[2]])
+        labels_reshape = tf.reshape(labels_flatten,[-1,1])
+        conditions_reshape = tf.reshape(input_conditions,[-1,1])
+        loss = tf.nn.sampled_softmax_loss(
+                             weights = self.kernel,
+                             biases = self.bias,
+                             labels = labels_reshape,
+                             inputs = inputs_reshape,
+                             num_sampled=self.num_samples,
+                             num_classes=self.num_classes,
+                             num_true=1)
+        loss = tf.reshape(loss, [-1,1])
+        loss = tf.multiply(loss,conditions_reshape)
+        non_zero = tf.cast(tf.count_nonzero(loss),tf.float32)
+        cost = self.lamb*tf.reduce_sum(loss)/non_zero
         self.add_loss(cost,x)
-        #you can output whatever you need, just update output_shape adequately
-        #But this is probably useful
         return cost
 
     def compute_output_shape(self, input_shape):
-        dense_shape,classes_shape = input_shape
-        return (dense_shape[0],)
+        dx0_shape, dx_shape,pr_shape,label_flatten_shape,input_conditions_shape= input_shape
+        return (dx0_shape[0],)
+    
+    def compute_mask(self, input, input_mask=None):
+        return None
