@@ -23,6 +23,7 @@ parser.add_argument('--count_cap', type=int, default=100)
 parser.add_argument('--dx_rarecutpoint', type=int, default=10)
 parser.add_argument('--pr_rarecutpoint', type=int, default=10)
 parser.add_argument('--other_pred', type=int, default=1, help='0 means no other predictors')
+parser.add_argument('--ndxpr', type=int, default=0, help='1 means including numbers of dx/pr as predictors')
 
 parser.add_argument('--job_index', type=int, default=0)
 
@@ -49,6 +50,7 @@ count_cap = args.count_cap
 DX_rarecutpoint = args.dx_rarecutpoint
 PR_rarecutpoint = args.pr_rarecutpoint
 other_pred = args.other_pred
+ndxpr = args.ndxpr
 
 job_index = args.job_index
 
@@ -65,7 +67,7 @@ path = '/nfs/turbo/umms-awaljee/wsliu/Data/NRD/'
 model_path = path + 'models/'
 if not os.path.exists(model_path): os.mkdir(model_path)
     
-from keras.layers import Input, Embedding, Concatenate, Reshape, Lambda
+from keras.layers import Input, Embedding, Concatenate, Reshape, Lambda, BatchNormalization
 from keras.models import Model
 from keras.layers.core import Dense, Activation, Dropout, RepeatVector
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
@@ -140,11 +142,14 @@ los_array_tst = (tst_df.LOS.values - los_mean)/los_std
 ed_mat_tst = to_categorical(tst_df.HCUP_ED.values, num_classes=n_ed)
 zipinc_mat_tst = to_categorical(tst_df.ZIPINC_QRTL.values, num_classes=n_zipinc)[:, 1:]
 #transfer_mat_tst = to_categorical(tst_df.SAMEDAYEVENT.values)
+ncode_mat_tst = tst_df[['NDX', 'NPR']].values
 if other_pred==0:
     other_mat_tst = demo_mat_tst
 else:
     other_mat_tst = np.concatenate((demo_mat_tst, pay1_mat_tst, los_array_tst.reshape(los_array_tst.shape+(1,)), 
                                     ed_mat_tst, zipinc_mat_tst), axis=1)
+if ndxpr==1:
+    other_mat_tst = np.concatenate((other_mat_tst, ncode_mat_tst), axis=1)
 y_true = tst_df.readm30.astype(int).values
 
 #split trn/val data, do a n_fold validation
@@ -177,11 +182,14 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
     ed_mat_train = to_categorical(train_df.HCUP_ED.values, num_classes=n_ed)
     zipinc_mat_train = to_categorical(train_df.ZIPINC_QRTL.values, num_classes=n_zipinc)[:, 1:]
     #transfer_mat_train = to_categorical(train_df.SAMEDAYEVENT.values)
+    ncode_mat_train = train_df[['NDX', 'NPR']].values
     if other_pred==0:
         other_mat_train = demo_mat_train
     else:
         other_mat_train = np.concatenate((demo_mat_train, pay1_mat_train, los_array_train.reshape(los_array_train.shape+(1,)), 
                                         ed_mat_train, zipinc_mat_train), axis=1)
+    if ndxpr==1:
+        other_mat_train = np.concatenate((other_mat_train, ncode_mat_train), axis=1)
     other_mat_trn = other_mat_train[trn_idx, :]
     other_mat_val = other_mat_train[val_idx, :]
 
@@ -239,6 +247,82 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
         merged = Dropout(dropout)(merged)
         prediction = Dense(2, activation='softmax')(merged)
         model = Model(inputs=[input_DX1, input_DX, input_PR, input_hosp, input_other], outputs=prediction)
+        
+    elif model_name=='setsum_lr':
+        input_DX1 = Input(shape=(1,))
+        DX1_embed = Embedding(input_dim=n_DX1_cat+1, output_dim=DX1_dim, embeddings_initializer=Constant(embeds['DX1_embed']), 
+                              name='DX1_embed')(input_DX1)     
+        DX1_embed = Reshape((DX1_dim,))(DX1_embed)
+        input_DX = Input(shape = (len(DXs),))
+        DX_embed = Embedding(input_dim=n_DX_cat+1, output_dim=DX_dim, mask_zero=True, embeddings_initializer=Constant(embeds['DX_embed']), 
+                             name='DX_embed')(input_DX)
+        DX_embed = MaskedDense(DX_dim, activation='relu')(DX_embed)
+        DX_embed = MaskedSum()(DX_embed)
+        input_PR = Input(shape = (len(PRs),))
+        PR_embed = Embedding(input_dim=n_PR_cat+1, output_dim=PR_dim, mask_zero=True, embeddings_initializer=Constant(embeds['PR_embed']), 
+                             name='PR_embed')(input_PR)
+        PR_embed = MaskedDense(PR_dim, activation='relu')(PR_embed)
+        PR_embed = MaskedSum()(PR_embed)
+        input_hosp = Input(shape=(1,))
+        hosp_embed = Embedding(input_dim=len(hosp_cat), output_dim=hosp_embed_dim, input_length=1)(input_hosp)
+        hosp_embed = Reshape((hosp_embed_dim, ))(hosp_embed)
+        input_other = Input(shape=(other_mat_train.shape[1], ))
+        merged = Concatenate(axis=1)([DX1_embed, DX_embed, PR_embed, hosp_embed, input_other])
+        prediction = Dense(2, activation='softmax')(merged)
+        model = Model(inputs=[input_DX1, input_DX, input_PR, input_hosp, input_other], outputs=prediction)
+        
+    elif model_name=='setsum_deep3':
+        input_DX1 = Input(shape=(1,))
+        DX1_embed = Embedding(input_dim=n_DX1_cat+1, output_dim=DX1_dim, embeddings_initializer=Constant(embeds['DX1_embed']), 
+                              name='DX1_embed')(input_DX1)     
+        DX1_embed = Reshape((DX1_dim,))(DX1_embed)
+        input_DX = Input(shape = (len(DXs),))
+        DX_embed = Embedding(input_dim=n_DX_cat+1, output_dim=DX_dim, mask_zero=True, embeddings_initializer=Constant(embeds['DX_embed']), 
+                             name='DX_embed')(input_DX)
+        DX_embed = MaskedDense(DX_dim, activation='relu')(DX_embed)
+        DX_embed = MaskedSum()(DX_embed)
+        input_PR = Input(shape = (len(PRs),))
+        PR_embed = Embedding(input_dim=n_PR_cat+1, output_dim=PR_dim, mask_zero=True, embeddings_initializer=Constant(embeds['PR_embed']), 
+                             name='PR_embed')(input_PR)
+        PR_embed = MaskedDense(PR_dim, activation='relu')(PR_embed)
+        PR_embed = MaskedSum()(PR_embed)
+        input_hosp = Input(shape=(1,))
+        hosp_embed = Embedding(input_dim=len(hosp_cat), output_dim=hosp_embed_dim, input_length=1)(input_hosp)
+        hosp_embed = Reshape((hosp_embed_dim, ))(hosp_embed)
+        input_other = Input(shape=(other_mat_train.shape[1], ))
+        merged = Concatenate(axis=1)([DX1_embed, DX_embed, PR_embed, hosp_embed, input_other])
+        merged = Dense(fc_width, activation='relu')(merged)
+        merged = Dense(fc_width, activation='relu')(merged)
+        merged = Dense(fc_width, activation='relu')(merged)
+        merged = Dropout(dropout)(merged)
+        prediction = Dense(2, activation='softmax')(merged)
+        model = Model(inputs=[input_DX1, input_DX, input_PR, input_hosp, input_other], outputs=prediction)
+        
+    elif model_name=='setsum_deep2':
+        input_DX1 = Input(shape=(1,))
+        DX1_embed = Embedding(input_dim=n_DX1_cat+1, output_dim=DX1_dim, embeddings_initializer=Constant(embeds['DX1_embed']), 
+                              name='DX1_embed')(input_DX1)     
+        DX1_embed = Reshape((DX1_dim,))(DX1_embed)
+        input_DX = Input(shape = (len(DXs),))
+        DX_embed = Embedding(input_dim=n_DX_cat+1, output_dim=DX_dim, mask_zero=True, embeddings_initializer=Constant(embeds['DX_embed']), 
+                             name='DX_embed')(input_DX)
+        DX_embed = MaskedDense(DX_dim, activation='relu')(DX_embed)
+        DX_embed = MaskedSum()(DX_embed)
+        input_PR = Input(shape = (len(PRs),))
+        PR_embed = Embedding(input_dim=n_PR_cat+1, output_dim=PR_dim, mask_zero=True, embeddings_initializer=Constant(embeds['PR_embed']), 
+                             name='PR_embed')(input_PR)
+        PR_embed = MaskedDense(PR_dim, activation='relu')(PR_embed)
+        PR_embed = MaskedSum()(PR_embed)
+        input_hosp = Input(shape=(1,))
+        hosp_embed = Embedding(input_dim=len(hosp_cat), output_dim=hosp_embed_dim, input_length=1)(input_hosp)
+        hosp_embed = Reshape((hosp_embed_dim, ))(hosp_embed)
+        input_other = Input(shape=(other_mat_train.shape[1], ))
+        merged = Concatenate(axis=1)([DX1_embed, DX_embed, PR_embed, hosp_embed, input_other])
+        merged = Dense(fc_width, activation='relu')(merged)
+        merged = Dense(fc_width, activation='relu')(merged)
+        merged = Dropout(dropout)(merged)
+        prediction = Dense(2, activation='softmax')(merged)
+        model = Model(inputs=[input_DX1, input_DX, input_PR, input_hosp, input_other], outputs=prediction)  
     
     for l in model.layers:
         if l.name=='DX_embed' or l.name=='PR_embed' or l.name=='DX1_embed':
@@ -298,4 +382,4 @@ y_pred_avg = y_pred_mat.mean(axis=1)
 fpr, tpr, _ = roc_curve(y_true, y_pred_avg)
 auc_avg = auc(fpr, tpr)
 with open(result_file.format(job_index), 'a') as f:
-    f.write('{},{},{},{},{},{},{:.1E},{:.1E},{:.1f},{},{},{},{},{},{},{},{},{},{:.5f},{:.5f},{:.5f},{}\n'.format(model_name, DX1_dim, DX_dim, PR_dim, hosp_embed_dim, fc_width, lr1, lr2, dropout, batchsize, embed_file, cohort, tst_seed, n_fold, count_cap, DX_rarecutpoint, PR_rarecutpoint, other_pred, auc_mean, auc_avg, auc_freeze_mean, y_pred_file))
+    f.write('{},{},{},{},{},{},{:.1E},{:.1E},{:.1f},{},{},{},{},{},{},{},{},{},{},{:.5f},{:.5f},{:.5f},{}\n'.format(model_name, DX1_dim, DX_dim, PR_dim, hosp_embed_dim, fc_width, lr1, lr2, dropout, batchsize, embed_file, cohort, tst_seed, n_fold, count_cap, DX_rarecutpoint, PR_rarecutpoint, other_pred, ndxpr, auc_mean, auc_avg, auc_freeze_mean, y_pred_file))
