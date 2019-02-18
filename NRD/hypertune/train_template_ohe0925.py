@@ -69,11 +69,11 @@ n_PR = 15
 DXs = ['DX'+str(n) for n in range(2, n_DX+2)]
 PRs = ['PR'+str(n) for n in range(1, n_PR+1)]
     
-all_df = pd.read_csv(path+'cohorts/{}/{}_pred.csv'.format(cohort, cohort), dtype=core_dtypes_pd)
+all_df = pd.read_csv(path+'cohorts30/{}/pred_comorb.csv'.format(cohort), dtype=core_dtypes_pd)
 preprocessed = preprocess(all_df, DX_rarecutpoint=10, PR_rarecutpoint=10)
 all_df = preprocessed['int_df']
 
-tst_key = pd.read_csv(path+'cohorts/{}/tst_key{}.csv'.format(cohort, tst_seed), names = ['KEY_NRD'])
+tst_key = pd.read_csv(path+'cohorts30/{}/tst_key{}.csv'.format(cohort, tst_seed), names = ['KEY_NRD'])
 tst_df = all_df.loc[all_df.KEY_NRD.isin(tst_key.KEY_NRD)]
 train_df0 = all_df.loc[~all_df.KEY_NRD.isin(tst_key.KEY_NRD)].reset_index()
 
@@ -110,8 +110,11 @@ los_array_tst = (tst_df.LOS.values - los_mean)/los_std
 ed_mat_tst = to_categorical(tst_df.HCUP_ED.values)
 zipinc_mat_tst = to_categorical(tst_df.ZIPINC_QRTL.values)[:, 1:]
 transfer_mat_tst = to_categorical(tst_df.SAMEDAYEVENT.values)
-other_mat_tst = np.concatenate((demo_mat_tst, pay1_mat_tst, los_array_tst.reshape(los_array_tst.shape+(1,)), 
-                                ed_mat_tst, zipinc_mat_tst, transfer_mat_tst), axis=1)
+#other_pred==0
+other_mat_tst = demo_mat_tst
+#other_pred==1
+#other_mat_tst = np.concatenate((demo_mat_tst, pay1_mat_tst, los_array_tst.reshape(los_array_tst.shape+(1,)), 
+#                                ed_mat_tst, zipinc_mat_tst, transfer_mat_tst), axis=1)
 y_true = tst_df.readm30.astype(int).values
 
 #split trn/val data, do a n_fold validation
@@ -146,8 +149,9 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
     ed_mat_train = to_categorical(train_df.HCUP_ED.values)
     zipinc_mat_train = to_categorical(train_df.ZIPINC_QRTL.values)[:, 1:]
     transfer_mat_train = to_categorical(train_df.SAMEDAYEVENT.values)
-    other_mat_train = np.concatenate((demo_mat_train, pay1_mat_train, los_array_train.reshape(los_array_train.shape+(1,)), 
-                                    ed_mat_train, zipinc_mat_train, transfer_mat_train), axis=1)
+    other_mat_train = demo_mat_train
+    #other_mat_train = np.concatenate((demo_mat_train, pay1_mat_train, los_array_train.reshape(los_array_train.shape+(1,)), 
+    #                                ed_mat_train, zipinc_mat_train, transfer_mat_train), axis=1)
 
     other_mat_trn = other_mat_train[trn_idx, :]
     other_mat_val = other_mat_train[val_idx, :]

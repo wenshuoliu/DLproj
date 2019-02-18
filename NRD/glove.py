@@ -296,7 +296,7 @@ class GloveMS(Glove):
     """ The child class of Glove, to embed DX1, DX and PR into different spaces, and train them with GloVe. 
     The user need to provide a pandas Dataframe of codes in terms of integers. 
     """
-    def __init__(self, n_DX1_cat, n_DX_cat, n_PR_cat, DX1_dim, DX_dim, PR_dim, **kwargs):
+    def __init__(self, n_DX1_cat, n_DX_cat, n_PR_cat, DX1_dim, DX_dim, PR_dim, n_dx1_ccs=None, n_dx_ccs=None, n_pr_ccs=None, **kwargs):
             super(GloveMS, self).__init__(**kwargs)
             self.__n_DX1_cat = n_DX1_cat
             self.__n_DX_cat = n_DX_cat
@@ -304,8 +304,15 @@ class GloveMS(Glove):
             self.__DX1_dim = DX1_dim
             self.__DX_dim = DX_dim
             self.__PR_dim = PR_dim
+            if n_dx1_ccs is None:
+                self.__regularize = False
+            else:
+                self.__regularize = True
+                self.__n_dx1_ccs = n_dx1_ccs
+                self.__n_dx_ccs = n_dx_ccs
+                self.__n_pr_ccs = n_pr_ccs
             
-    def train_glove(self, cooccur_df=None, cache_path='./', batch_size=512, lr=1e-3, epochs=50, earlystop_patience=20, reducelr_patience=10, verbose=2):
+    def train_glove(self, cooccur_df=None, cache_path='./', batch_size=512, lr=1e-3, epochs=50, optimizer='adam', earlystop_patience=20, reducelr_patience=10, dx1_parent_pairs=None, dx_parent_pairs=None, pr_parent_pairs=None, lamb=1., metric='l2', verbose=2):
         print('Preparing data...')
         if cooccur_df is None:
             cooccur_df = self.get_cooccur_df()
@@ -334,12 +341,21 @@ class GloveMS(Glove):
         input_DX_v = Input(shape=(1,), name='input_context_DX')
         input_PR_v = Input(shape=(1,), name='input_context_PR')
 
-        DX1_embed_layer = Embedding(input_dim=self.__n_DX1_cat+1, output_dim=self.__DX1_dim, name='DX1_embed', mask_zero=True)
-        DX_embed_layer = Embedding(input_dim=self.__n_DX_cat+1, output_dim=self.__DX_dim, name='DX_embed', mask_zero=True)
-        PR_embed_layer = Embedding(input_dim=self.__n_PR_cat+1, output_dim=self.__PR_dim, name='PR_embed', mask_zero=True)
+        if self.__regularize==False:
+            DX1_embed_layer = Embedding(input_dim=self.__n_DX1_cat+1, output_dim=self.__DX1_dim, name='DX1_embed', mask_zero=True)
+            DX_embed_layer = Embedding(input_dim=self.__n_DX_cat+1, output_dim=self.__DX_dim, name='DX_embed', mask_zero=True)
+            PR_embed_layer = Embedding(input_dim=self.__n_PR_cat+1, output_dim=self.__PR_dim, name='PR_embed', mask_zero=True)
+        else:
+            DX1_embed_layer = Embedding(input_dim=self.__n_DX1_cat+self.__n_dx1_ccs+1, output_dim=self.__DX1_dim, name='DX1_embed',
+                                        mask_zero=True, embeddings_regularizer=Parent_reg(dx1_parent_pairs, lamb, metric))
+            DX_embed_layer = Embedding(input_dim=self.__n_DX_cat+self.__n_dx_ccs+1, output_dim=self.__DX_dim, name='DX_embed', 
+                                       mask_zero=True, embeddings_regularizer=Parent_reg(dx_parent_pairs, lamb, metric))
+            PR_embed_layer = Embedding(input_dim=self.__n_PR_cat+self.__n_pr_ccs+1, output_dim=self.__PR_dim, name='PR_embed', 
+                                       mask_zero=True, embeddings_regularizer=Parent_reg(pr_parent_pairs, lamb, metric))
+            
         DX1_bias_layer = Embedding(input_dim=self.__n_DX1_cat+1, output_dim=1, name='DX1_bias', mask_zero=True)
         DX_bias_layer = Embedding(input_dim=self.__n_DX_cat+1, output_dim=1, name='DX_bias', mask_zero=True)
-        PR_bias_layer = Embedding(input_dim=self.__n_PR_cat+1, output_dim=1, name='PR_bias', mask_zero=True)
+        PR_bias_layer = Embedding(input_dim=self.__n_PR_cat+1, output_dim=1, name='PR_bias', mask_zero=True)            
 
         embed_DX1_w = DX1_embed_layer(input_DX1_w)
         embed_DX1_v = DX1_embed_layer(input_DX1_v)
