@@ -51,7 +51,7 @@ from ccs_tools import dx_multi, pr_multi, core_dtypes_pd
 from utils import Parent_reg, get_frequency, preprocess, preprocess_ms
 
 unclassified = set(dx_multi.loc[dx_multi.CCS_LVL1 == '18', 'ICD9CM_CODE'])
-folder = 'elder/'
+folder = 'all/'
 DX1_freq = pd.read_csv(path+folder+'DX1_freq.csv', dtype={'DX1':str, 'frequency':int})
 DX_freq = pd.read_csv(path+folder+'DX_freq.csv', dtype={'DX':str, 'frequency':int})
 PR_freq = pd.read_csv(path+folder+'PR_freq.csv', dtype={'PR':str, 'frequency':int})
@@ -66,7 +66,7 @@ n_DX_cat = len(DX_cat)
 n_PR_cat = len(PR_cat)
 
 cooccur_all = pd.read_csv(path+folder+'cooccur_df{}.csv'.format(DX1_rarecutpoint))
-all_df = pd.read_csv(path+folder+'cohorts10/ami/ami_pred.csv', dtype=core_dtypes_pd)
+all_df = pd.read_csv(path+folder+'cohorts10/ami/pred_comorb.csv', dtype=core_dtypes_pd)
 
 preprocessed_ms = preprocess_ms(all_df, DX1_cat=DX1_cat, DX_cat=DX_cat, PR_cat=PR_cat)
 dx1_ccs_dict = preprocessed_ms['dx1_ccs_dict']

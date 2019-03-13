@@ -4,6 +4,8 @@ from itertools import cycle
 from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 
+import numpy as np
+import pandas as pd
 from scipy.interpolate import interp1d
 
 import matplotlib

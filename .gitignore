@@ -2,6 +2,7 @@
 */*.pbs~
 */*.py~
 output/
+plots/
 __pycache__/
 */.ipynb_checkpoints/
 */debug.ipynb

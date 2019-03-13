@@ -155,19 +155,19 @@ hosp_array_tst = tst_df['HOSP_NRD'].values
     
 demo_mat_tst = tst_df[['AGE', 'FEMALE']].values
 demo_mat_tst[:, 0] = (demo_mat_tst[:, 0]-age_mean)/age_std
-pay1_mat_tst = to_categorical(tst_df.PAY1.values, num_classes=n_pay1)[:, 1:]
+#pay1_mat_tst = to_categorical(tst_df.PAY1.values, num_classes=n_pay1)[:, 1:]
 los_array_tst = (tst_df.LOS.values - los_mean)/los_std
-ed_mat_tst = to_categorical(tst_df.HCUP_ED.values, num_classes=n_ed)
+#ed_mat_tst = to_categorical(tst_df.HCUP_ED.values, num_classes=n_ed)
 #zipinc_mat_tst = to_categorical(tst_df.ZIPINC_QRTL.values, num_classes=n_zipinc)[:, 1:]
 #transfer_mat_tst = to_categorical(tst_df.SAMEDAYEVENT.values)
-ncode_mat_tst = tst_df[['NDX', 'NPR']].values
+#ncode_mat_tst = tst_df[['NDX', 'NPR']].values
 if other_pred==0:
     other_mat_tst = demo_mat_tst
-else:
-    other_mat_tst = np.concatenate((demo_mat_tst, pay1_mat_tst, los_array_tst.reshape(los_array_tst.shape+(1,)), 
-                                    ed_mat_tst), axis=1)
-if ndxpr==1:
-    other_mat_tst = np.concatenate((other_mat_tst, ncode_mat_tst), axis=1)
+#else:
+#    other_mat_tst = np.concatenate((demo_mat_tst, pay1_mat_tst, los_array_tst.reshape(los_array_tst.shape+(1,)), 
+#                                    ed_mat_tst), axis=1)
+#if ndxpr==1:
+#    other_mat_tst = np.concatenate((other_mat_tst, ncode_mat_tst), axis=1)
 y_true = tst_df.readm30.astype(int).values
 
 #split trn/val data, do a n_fold validation
@@ -196,19 +196,19 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
     
     demo_mat_train = train_df[['AGE', 'FEMALE']].values
     demo_mat_train[:, 0] = (demo_mat_train[:, 0]-age_mean)/age_std
-    pay1_mat_train = to_categorical(train_df.PAY1.values, num_classes=n_pay1)[:, 1:]
-    los_array_train = (train_df.LOS.values - los_mean)/los_std
-    ed_mat_train = to_categorical(train_df.HCUP_ED.values, num_classes=n_ed)
+    #pay1_mat_train = to_categorical(train_df.PAY1.values, num_classes=n_pay1)[:, 1:]
+    #los_array_train = (train_df.LOS.values - los_mean)/los_std
+    #ed_mat_train = to_categorical(train_df.HCUP_ED.values, num_classes=n_ed)
     #zipinc_mat_train = to_categorical(train_df.ZIPINC_QRTL.values, num_classes=n_zipinc)[:, 1:]
     #transfer_mat_train = to_categorical(train_df.SAMEDAYEVENT.values)
-    ncode_mat_train = train_df[['NDX', 'NPR']].values
+    #ncode_mat_train = train_df[['NDX', 'NPR']].values
     if other_pred==0:
         other_mat_train = demo_mat_train
-    else:
-        other_mat_train = np.concatenate((demo_mat_train, pay1_mat_train, los_array_train.reshape(los_array_train.shape+(1,)), 
-                                        ed_mat_train), axis=1)
-    if ndxpr==1:
-        other_mat_train = np.concatenate((other_mat_train, ncode_mat_train), axis=1)
+    #else:
+    #    other_mat_train = np.concatenate((demo_mat_train, pay1_mat_train, los_array_train.reshape(los_array_train.shape+(1,)), 
+    #                                    ed_mat_train), axis=1)
+    #if ndxpr==1:
+    #    other_mat_train = np.concatenate((other_mat_train, ncode_mat_train), axis=1)
     other_mat_trn = other_mat_train[trn_idx, :]
     other_mat_val = other_mat_train[val_idx, :]
 
@@ -403,7 +403,7 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
     y_pred = y[:, 1]
     fpr, tpr, _ = roc_curve(y_true, y_pred)
     roc_auc = auc(fpr, tpr)
-    model.save_weights(model_path+'elder/cohorts10/ms_{}{}{}.h5'.format(cohort, tst_seed, val_ind))
+    #model.save_weights(model_path+'report/cohorts10/ms_{}{}{}.h5'.format(cohort, tst_seed, val_ind))
     auc_lst.append(roc_auc)
     y_pred_lst.append(y_pred)
     val_ind += 1

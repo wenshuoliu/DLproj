@@ -49,8 +49,9 @@ from utils import get_frequency, preprocess_ms
 
 from ccs_tools import dx_multi, pr_multi, core_dtypes_pd
 
-all_df = pd.read_csv(path+'cohorts20/{}/pred_comorb.csv'.format(cohort), dtype=core_dtypes_pd)
-tst_key = pd.read_csv(path+'cohorts20/{}/tst_key{}.csv'.format(cohort, tst_seed), names = ['KEY_NRD'])
+folder = 'multi_space_glove/'
+all_df = pd.read_csv(path+folder+'cohorts10/{}/pred_comorb.csv'.format(cohort), dtype=core_dtypes_pd)
+tst_key = pd.read_csv(path+folder+'cohorts10/{}/tst_key{}.csv'.format(cohort, tst_seed), names = ['KEY_NRD'])
 tst_df = all_df.loc[all_df.KEY_NRD.isin(tst_key.KEY_NRD)]
 train_df0 = all_df.loc[~all_df.KEY_NRD.isin(tst_key.KEY_NRD)].reset_index()
 
@@ -68,9 +69,9 @@ n_PR = 15
 DXs = ['DX'+str(n) for n in range(2, n_DX+2)]
 PRs = ['PR'+str(n) for n in range(1, n_PR+1)]
 
-DX1_rarecutpoint = 0
-DX_rarecutpoint = 0
-PR_rarecutpoint = 0
+DX1_rarecutpoint = 10
+DX_rarecutpoint = 10
+PR_rarecutpoint = 10
 
 unclassified = set(dx_multi.loc[dx_multi.CCS_LVL1 == '18', 'ICD9CM_CODE'])
 DX1_freq = pd.read_csv(path+'all/DX1_freq.csv', dtype={'DX1':str, 'frequency':int})
@@ -100,9 +101,9 @@ age_mean = train_df0['AGE'].mean()
 age_std = train_df0['AGE'].std()
 los_mean = train_df0['LOS'].mean()
 los_std = train_df0['LOS'].std()
-n_pay1 = int(train_df0['PAY1'].max())+1
-n_ed = int(train_df0['HCUP_ED'].max())+1
-n_zipinc = int(train_df0['ZIPINC_QRTL'].max())+1
+#n_pay1 = int(train_df0['PAY1'].max())+1
+#n_ed = int(train_df0['HCUP_ED'].max())+1
+#n_zipinc = int(train_df0['ZIPINC_QRTL'].max())+1
 
 index_df = preprocessed_ms['int_df']
 DX1_array = index_df.DX1.values
@@ -113,10 +114,10 @@ hosp_array = index_df['HOSP_NRD'].values
 
 demo_mat = index_df[['AGE', 'FEMALE']].values
 demo_mat[:, 0] = (demo_mat[:, 0]-age_mean)/age_std
-pay1_mat = to_categorical(index_df.PAY1.values, num_classes=n_pay1)[:, 1:]
-los_array = (index_df.LOS.values - los_mean)/los_std
-ed_mat = to_categorical(index_df.HCUP_ED.values, num_classes=n_ed)
-zipinc_mat = to_categorical(index_df.ZIPINC_QRTL.values, num_classes=n_zipinc)[:, 1:]
+#pay1_mat = to_categorical(index_df.PAY1.values, num_classes=n_pay1)[:, 1:]
+#los_array = (index_df.LOS.values - los_mean)/los_std
+#ed_mat = to_categorical(index_df.HCUP_ED.values, num_classes=n_ed)
+#zipinc_mat = to_categorical(index_df.ZIPINC_QRTL.values, num_classes=n_zipinc)[:, 1:]
 #other_pred==0
 other_mat = demo_mat
 
@@ -125,7 +126,7 @@ from setsum_layer import SetSum, MaskedSum, MaskedDense, MaskedPooling
 
 DX1_dim = 200
 DX_dim = 200
-PR_dim = 100
+PR_dim = 50
 fc_width = 512
 hosp_embed_dim = 1
 dropout = 0.3
@@ -153,17 +154,21 @@ merged = Dense(fc_width, activation='relu')(merged)
 merged = Dropout(dropout)(merged)
 prediction = Dense(2, activation='softmax')(merged)
 model = Model(inputs=[input_DX1, input_DX, input_PR, input_hosp, input_other], outputs=prediction)   
+
 # save all validation folds:
-'''
+
 recycle_pred = np.zeros((len(hosp_cat), 9))
 for val_ind in range(9):
-    model.load_weights(model_path+'cohorts20/ms_{}{}{}.h5'.format(cohort, tst_seed, val_ind))
+    model.load_weights(model_path+'report/cohorts10/ms_{}{}{}.h5'.format(cohort, tst_seed, val_ind))
     for i, hosp in enumerate(hosp_cat):
         hosp_array = np.repeat(hosp_dict[hosp], len(index_df))
         y_pred = model.predict([DX1_array, DX_mat, PR_mat, hosp_array, other_mat], verbose=0)
         recycle_pred[i, val_ind] = y_pred[:, 1].mean()
 res_df = pd.DataFrame(recycle_pred, columns=['recyc_pred'+str(j) for j in range(9)])
 res_df = res_df.assign(HOSP_NRD=hosp_cat)
+
+
+# no test set:
 '''
 recycle_pred = np.zeros((len(hosp_cat), ))
 model.load_weights(model_path+'cohorts20/ms_notest_{}{}.h5'.format(cohort, tst_seed))
@@ -172,5 +177,6 @@ for i, hosp in enumerate(hosp_cat):
     y_pred = model.predict([DX1_array, DX_mat, PR_mat, hosp_array, other_mat], verbose=0)
     recycle_pred[i] = y_pred[:, 1].mean()
 res_df = pd.DataFrame(dict(HOSP_NRD=hosp_cat, recyc_pred=recycle_pred))
+'''
 
-res_df.to_csv(path+'cohorts20/{}/recyc_pred_ms_notest_{}{}_{:.2f}.csv'.format(cohort, eval_data, tst_seed, resample_frac), index=False)
+res_df.to_csv(path+folder+'cohorts10/{}/recyc_pred_{}{}_{:.2f}.csv'.format(cohort, eval_data, tst_seed, resample_frac), index=False)
