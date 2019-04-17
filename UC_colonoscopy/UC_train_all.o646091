@@ -1,0 +1,690 @@
+nyx7508
+2019-03-18 23:23:06.956884: I tensorflow/core/platform/cpu_feature_guard.cc:137] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
+2019-03-18 23:23:07.410172: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1030] Found device 0 with properties: 
+name: Tesla K40m major: 3 minor: 5 memoryClockRate(GHz): 0.745
+pciBusID: 0000:02:00.0
+totalMemory: 11.17GiB freeMemory: 11.09GiB
+2019-03-18 23:23:07.410266: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1120] Creating TensorFlow device (/device:GPU:0) -> (device: 0, name: Tesla K40m, pci bus id: 0000:02:00.0, compute capability: 3.5)
+Found 16514 images in the directory.
+Using split0_123 as categorical label, with levels: {0: 0, 1: 1}
+Using split01_23 as categorical label, with levels: {0: 0, 1: 1}
+Using split012_3 as categorical label, with levels: {0: 0, 1: 1}
+Using 14847 images to generate mini-batches.
+Found 16514 images in the directory.
+Using split0_123 as categorical label, with levels: {0: 0, 1: 1}
+Using split01_23 as categorical label, with levels: {0: 0, 1: 1}
+Using split012_3 as categorical label, with levels: {0: 0, 1: 1}
+Using 1667 images to generate mini-batches.
+Epoch 1/100
+ - 897s - loss: 2.8334 - split0_123_loss: 1.0895 - split01_23_loss: 0.9327 - split012_3_loss: 0.8111 - val_loss: 2.3028 - val_split0_123_loss: 0.7942 - val_split01_23_loss: 0.8164 - val_split012_3_loss: 0.6922
+AUC_split0_123: 0.8057
+AUC_split01_23: 0.9018
+AUC_split012_3: 0.9541
+Mean AUC: 0.8872
+
+Epoch 2/100
+ - 619s - loss: 2.3504 - split0_123_loss: 0.9376 - split01_23_loss: 0.7661 - split012_3_loss: 0.6467 - val_loss: 1.7645 - val_split0_123_loss: 1.2604 - val_split01_23_loss: 0.3265 - val_split012_3_loss: 0.1776
+AUC_split0_123: 0.7281
+AUC_split01_23: 0.9094
+AUC_split012_3: 0.9278
+Mean AUC: 0.8551
+
+Epoch 3/100
+ - 618s - loss: 2.2091 - split0_123_loss: 0.8938 - split01_23_loss: 0.7133 - split012_3_loss: 0.6020 - val_loss: 1.0724 - val_split0_123_loss: 0.6242 - val_split01_23_loss: 0.2904 - val_split012_3_loss: 0.1579
+AUC_split0_123: 0.7892
+AUC_split01_23: 0.9248
+AUC_split012_3: 0.9515
+Mean AUC: 0.8885
+
+Epoch 4/100
+ - 618s - loss: 2.1633 - split0_123_loss: 0.8738 - split01_23_loss: 0.7015 - split012_3_loss: 0.5881 - val_loss: 1.3561 - val_split0_123_loss: 0.5065 - val_split01_23_loss: 0.3495 - val_split012_3_loss: 0.5001
+AUC_split0_123: 0.8579
+AUC_split01_23: 0.9342
+AUC_split012_3: 0.9550
+Mean AUC: 0.9157
+
+Epoch 5/100
+ - 641s - loss: 2.1013 - split0_123_loss: 0.8531 - split01_23_loss: 0.6735 - split012_3_loss: 0.5748 - val_loss: 1.5914 - val_split0_123_loss: 0.4813 - val_split01_23_loss: 0.5325 - val_split012_3_loss: 0.5776
+AUC_split0_123: 0.8898
+AUC_split01_23: 0.9445
+AUC_split012_3: 0.9545
+Mean AUC: 0.9296
+
+Epoch 6/100
+ - 621s - loss: 2.0912 - split0_123_loss: 0.8573 - split01_23_loss: 0.6752 - split012_3_loss: 0.5588 - val_loss: 1.0764 - val_split0_123_loss: 0.5166 - val_split01_23_loss: 0.2863 - val_split012_3_loss: 0.2735
+AUC_split0_123: 0.8836
+AUC_split01_23: 0.9270
+AUC_split012_3: 0.9492
+Mean AUC: 0.9199
+
+Epoch 7/100
+ - 616s - loss: 2.0394 - split0_123_loss: 0.8351 - split01_23_loss: 0.6515 - split012_3_loss: 0.5528 - val_loss: 0.9334 - val_split0_123_loss: 0.4520 - val_split01_23_loss: 0.3075 - val_split012_3_loss: 0.1739
+AUC_split0_123: 0.8943
+AUC_split01_23: 0.9399
+AUC_split012_3: 0.9585
+Mean AUC: 0.9309
+
+Epoch 8/100
+ - 618s - loss: 2.0263 - split0_123_loss: 0.8276 - split01_23_loss: 0.6604 - split012_3_loss: 0.5384 - val_loss: 1.0143 - val_split0_123_loss: 0.4722 - val_split01_23_loss: 0.3363 - val_split012_3_loss: 0.2057
+AUC_split0_123: 0.8587
+AUC_split01_23: 0.9026
+AUC_split012_3: 0.9146
+Mean AUC: 0.8920
+
+Epoch 9/100
+ - 615s - loss: 2.0334 - split0_123_loss: 0.8240 - split01_23_loss: 0.6492 - split012_3_loss: 0.5602 - val_loss: 1.4992 - val_split0_123_loss: 0.7209 - val_split01_23_loss: 0.5571 - val_split012_3_loss: 0.2212
+AUC_split0_123: 0.8943
+AUC_split01_23: 0.9520
+AUC_split012_3: 0.9505
+Mean AUC: 0.9323
+
+Epoch 10/100
+ - 615s - loss: 2.0192 - split0_123_loss: 0.8307 - split01_23_loss: 0.6491 - split012_3_loss: 0.5394 - val_loss: 1.0472 - val_split0_123_loss: 0.4561 - val_split01_23_loss: 0.3274 - val_split012_3_loss: 0.2638
+AUC_split0_123: 0.8778
+AUC_split01_23: 0.9198
+AUC_split012_3: 0.9125
+Mean AUC: 0.9034
+
+Epoch 11/100
+ - 615s - loss: 1.9396 - split0_123_loss: 0.7992 - split01_23_loss: 0.6107 - split012_3_loss: 0.5297 - val_loss: 1.0719 - val_split0_123_loss: 0.4596 - val_split01_23_loss: 0.3111 - val_split012_3_loss: 0.3013
+AUC_split0_123: 0.8713
+AUC_split01_23: 0.9346
+AUC_split012_3: 0.9498
+Mean AUC: 0.9186
+
+Epoch 12/100
+ - 615s - loss: 1.9183 - split0_123_loss: 0.7982 - split01_23_loss: 0.6128 - split012_3_loss: 0.5073 - val_loss: 1.0254 - val_split0_123_loss: 0.4117 - val_split01_23_loss: 0.3412 - val_split012_3_loss: 0.2725
+AUC_split0_123: 0.9096
+AUC_split01_23: 0.9571
+AUC_split012_3: 0.9692
+Mean AUC: 0.9453
+
+Epoch 13/100
+ - 615s - loss: 1.9256 - split0_123_loss: 0.8018 - split01_23_loss: 0.6133 - split012_3_loss: 0.5104 - val_loss: 0.8389 - val_split0_123_loss: 0.4503 - val_split01_23_loss: 0.2390 - val_split012_3_loss: 0.1495
+AUC_split0_123: 0.8744
+AUC_split01_23: 0.9470
+AUC_split012_3: 0.9605
+Mean AUC: 0.9273
+
+Epoch 14/100
+ - 619s - loss: 1.8764 - split0_123_loss: 0.7806 - split01_23_loss: 0.5922 - split012_3_loss: 0.5036 - val_loss: 1.3540 - val_split0_123_loss: 0.4767 - val_split01_23_loss: 0.4489 - val_split012_3_loss: 0.4284
+AUC_split0_123: 0.9142
+AUC_split01_23: 0.9552
+AUC_split012_3: 0.9699
+Mean AUC: 0.9464
+
+Epoch 15/100
+ - 613s - loss: 1.8947 - split0_123_loss: 0.7872 - split01_23_loss: 0.5958 - split012_3_loss: 0.5117 - val_loss: 0.7583 - val_split0_123_loss: 0.3681 - val_split01_23_loss: 0.2522 - val_split012_3_loss: 0.1379
+AUC_split0_123: 0.9139
+AUC_split01_23: 0.9550
+AUC_split012_3: 0.9668
+Mean AUC: 0.9453
+
+Epoch 16/100
+ - 641s - loss: 1.8504 - split0_123_loss: 0.7717 - split01_23_loss: 0.5790 - split012_3_loss: 0.4997 - val_loss: 1.4976 - val_split0_123_loss: 0.5472 - val_split01_23_loss: 0.6452 - val_split012_3_loss: 0.3052
+AUC_split0_123: 0.8914
+AUC_split01_23: 0.9516
+AUC_split012_3: 0.9495
+Mean AUC: 0.9308
+
+Epoch 17/100
+ - 614s - loss: 1.8508 - split0_123_loss: 0.7685 - split01_23_loss: 0.5825 - split012_3_loss: 0.4997 - val_loss: 1.0311 - val_split0_123_loss: 0.4488 - val_split01_23_loss: 0.3178 - val_split012_3_loss: 0.2645
+AUC_split0_123: 0.9040
+AUC_split01_23: 0.9509
+AUC_split012_3: 0.9601
+Mean AUC: 0.9383
+
+Epoch 18/100
+ - 616s - loss: 1.8393 - split0_123_loss: 0.7633 - split01_23_loss: 0.5801 - split012_3_loss: 0.4960 - val_loss: 1.4182 - val_split0_123_loss: 0.7530 - val_split01_23_loss: 0.4007 - val_split012_3_loss: 0.2644
+AUC_split0_123: 0.8196
+AUC_split01_23: 0.8674
+AUC_split012_3: 0.8937
+Mean AUC: 0.8602
+
+Epoch 19/100
+ - 615s - loss: 1.8828 - split0_123_loss: 0.7912 - split01_23_loss: 0.5914 - split012_3_loss: 0.5002 - val_loss: 0.9239 - val_split0_123_loss: 0.4479 - val_split01_23_loss: 0.3179 - val_split012_3_loss: 0.1581
+AUC_split0_123: 0.8830
+AUC_split01_23: 0.9140
+AUC_split012_3: 0.9511
+Mean AUC: 0.9160
+
+Epoch 20/100
+ - 614s - loss: 1.8410 - split0_123_loss: 0.7867 - split01_23_loss: 0.5731 - split012_3_loss: 0.4811 - val_loss: 0.8865 - val_split0_123_loss: 0.4120 - val_split01_23_loss: 0.2648 - val_split012_3_loss: 0.2097
+AUC_split0_123: 0.8928
+AUC_split01_23: 0.9397
+AUC_split012_3: 0.9482
+Mean AUC: 0.9269
+
+Epoch 21/100
+ - 616s - loss: 1.8256 - split0_123_loss: 0.7705 - split01_23_loss: 0.5700 - split012_3_loss: 0.4851 - val_loss: 0.9714 - val_split0_123_loss: 0.4406 - val_split01_23_loss: 0.2753 - val_split012_3_loss: 0.2555
+AUC_split0_123: 0.8824
+AUC_split01_23: 0.9536
+AUC_split012_3: 0.9724
+Mean AUC: 0.9361
+
+Epoch 22/100
+ - 614s - loss: 1.7941 - split0_123_loss: 0.7552 - split01_23_loss: 0.5594 - split012_3_loss: 0.4795 - val_loss: 2.2346 - val_split0_123_loss: 0.8428 - val_split01_23_loss: 0.9925 - val_split012_3_loss: 0.3993
+AUC_split0_123: 0.8383
+AUC_split01_23: 0.9183
+AUC_split012_3: 0.9649
+Mean AUC: 0.9071
+
+Epoch 23/100
+ - 615s - loss: 1.7750 - split0_123_loss: 0.7479 - split01_23_loss: 0.5472 - split012_3_loss: 0.4799 - val_loss: 0.8704 - val_split0_123_loss: 0.4162 - val_split01_23_loss: 0.2914 - val_split012_3_loss: 0.1628
+AUC_split0_123: 0.8954
+AUC_split01_23: 0.9278
+AUC_split012_3: 0.9590
+Mean AUC: 0.9274
+
+Epoch 24/100
+ - 615s - loss: 1.7586 - split0_123_loss: 0.7384 - split01_23_loss: 0.5478 - split012_3_loss: 0.4723 - val_loss: 1.4068 - val_split0_123_loss: 0.6599 - val_split01_23_loss: 0.4888 - val_split012_3_loss: 0.2580
+AUC_split0_123: 0.8732
+AUC_split01_23: 0.9456
+AUC_split012_3: 0.9609
+Mean AUC: 0.9266
+
+Epoch 25/100
+ - 615s - loss: 1.7412 - split0_123_loss: 0.7491 - split01_23_loss: 0.5451 - split012_3_loss: 0.4470 - val_loss: 0.7546 - val_split0_123_loss: 0.4049 - val_split01_23_loss: 0.2197 - val_split012_3_loss: 0.1300
+AUC_split0_123: 0.9075
+AUC_split01_23: 0.9592
+AUC_split012_3: 0.9715
+Mean AUC: 0.9461
+
+Epoch 26/100
+ - 615s - loss: 1.7354 - split0_123_loss: 0.7425 - split01_23_loss: 0.5337 - split012_3_loss: 0.4592 - val_loss: 0.8723 - val_split0_123_loss: 0.3830 - val_split01_23_loss: 0.2314 - val_split012_3_loss: 0.2579
+AUC_split0_123: 0.9061
+AUC_split01_23: 0.9607
+AUC_split012_3: 0.9733
+Mean AUC: 0.9467
+
+Epoch 27/100
+ - 616s - loss: 1.7203 - split0_123_loss: 0.7349 - split01_23_loss: 0.5470 - split012_3_loss: 0.4384 - val_loss: 1.0681 - val_split0_123_loss: 0.3997 - val_split01_23_loss: 0.2742 - val_split012_3_loss: 0.3941
+AUC_split0_123: 0.9066
+AUC_split01_23: 0.9523
+AUC_split012_3: 0.9706
+Mean AUC: 0.9431
+
+Epoch 28/100
+ - 616s - loss: 1.7042 - split0_123_loss: 0.7303 - split01_23_loss: 0.5307 - split012_3_loss: 0.4433 - val_loss: 0.7777 - val_split0_123_loss: 0.3893 - val_split01_23_loss: 0.2299 - val_split012_3_loss: 0.1586
+AUC_split0_123: 0.9129
+AUC_split01_23: 0.9518
+AUC_split012_3: 0.9675
+Mean AUC: 0.9441
+
+Epoch 29/100
+ - 615s - loss: 1.7577 - split0_123_loss: 0.7374 - split01_23_loss: 0.5497 - split012_3_loss: 0.4705 - val_loss: 0.8946 - val_split0_123_loss: 0.4112 - val_split01_23_loss: 0.3718 - val_split012_3_loss: 0.1115
+AUC_split0_123: 0.9109
+AUC_split01_23: 0.9536
+AUC_split012_3: 0.9759
+Mean AUC: 0.9468
+
+Epoch 30/100
+ - 615s - loss: 1.6931 - split0_123_loss: 0.7336 - split01_23_loss: 0.5299 - split012_3_loss: 0.4297 - val_loss: 0.7403 - val_split0_123_loss: 0.3729 - val_split01_23_loss: 0.2053 - val_split012_3_loss: 0.1621
+AUC_split0_123: 0.9135
+AUC_split01_23: 0.9599
+AUC_split012_3: 0.9717
+Mean AUC: 0.9484
+
+Epoch 31/100
+ - 616s - loss: 1.6542 - split0_123_loss: 0.7042 - split01_23_loss: 0.5089 - split012_3_loss: 0.4412 - val_loss: 0.9533 - val_split0_123_loss: 0.3760 - val_split01_23_loss: 0.2970 - val_split012_3_loss: 0.2804
+AUC_split0_123: 0.9147
+AUC_split01_23: 0.9539
+AUC_split012_3: 0.9740
+Mean AUC: 0.9475
+
+Epoch 32/100
+ - 615s - loss: 1.6808 - split0_123_loss: 0.7299 - split01_23_loss: 0.5173 - split012_3_loss: 0.4336 - val_loss: 0.8239 - val_split0_123_loss: 0.4445 - val_split01_23_loss: 0.2473 - val_split012_3_loss: 0.1321
+AUC_split0_123: 0.9100
+AUC_split01_23: 0.9470
+AUC_split012_3: 0.9674
+Mean AUC: 0.9415
+
+Epoch 33/100
+ - 616s - loss: 1.6620 - split0_123_loss: 0.7124 - split01_23_loss: 0.5198 - split012_3_loss: 0.4299 - val_loss: 0.9736 - val_split0_123_loss: 0.4543 - val_split01_23_loss: 0.3750 - val_split012_3_loss: 0.1443
+AUC_split0_123: 0.9199
+AUC_split01_23: 0.9572
+AUC_split012_3: 0.9718
+Mean AUC: 0.9496
+
+Epoch 34/100
+ - 616s - loss: 1.6570 - split0_123_loss: 0.7118 - split01_23_loss: 0.5161 - split012_3_loss: 0.4291 - val_loss: 1.0972 - val_split0_123_loss: 0.6332 - val_split01_23_loss: 0.3233 - val_split012_3_loss: 0.1407
+AUC_split0_123: 0.8957
+AUC_split01_23: 0.9443
+AUC_split012_3: 0.9645
+Mean AUC: 0.9348
+
+Epoch 35/100
+ - 616s - loss: 1.6328 - split0_123_loss: 0.7083 - split01_23_loss: 0.5110 - split012_3_loss: 0.4136 - val_loss: 0.7488 - val_split0_123_loss: 0.3738 - val_split01_23_loss: 0.2049 - val_split012_3_loss: 0.1700
+AUC_split0_123: 0.9151
+AUC_split01_23: 0.9611
+AUC_split012_3: 0.9726
+Mean AUC: 0.9496
+
+Epoch 36/100
+ - 616s - loss: 1.6606 - split0_123_loss: 0.7218 - split01_23_loss: 0.5191 - split012_3_loss: 0.4197 - val_loss: 0.8130 - val_split0_123_loss: 0.3778 - val_split01_23_loss: 0.2529 - val_split012_3_loss: 0.1823
+AUC_split0_123: 0.9231
+AUC_split01_23: 0.9609
+AUC_split012_3: 0.9688
+Mean AUC: 0.9509
+
+Epoch 37/100
+ - 616s - loss: 1.6033 - split0_123_loss: 0.6961 - split01_23_loss: 0.4943 - split012_3_loss: 0.4129 - val_loss: 1.0304 - val_split0_123_loss: 0.3896 - val_split01_23_loss: 0.3514 - val_split012_3_loss: 0.2893
+AUC_split0_123: 0.9110
+AUC_split01_23: 0.9470
+AUC_split012_3: 0.9615
+Mean AUC: 0.9398
+
+Epoch 38/100
+ - 615s - loss: 1.6278 - split0_123_loss: 0.7006 - split01_23_loss: 0.5061 - split012_3_loss: 0.4212 - val_loss: 0.8113 - val_split0_123_loss: 0.3813 - val_split01_23_loss: 0.2719 - val_split012_3_loss: 0.1580
+AUC_split0_123: 0.9157
+AUC_split01_23: 0.9467
+AUC_split012_3: 0.9594
+Mean AUC: 0.9406
+
+Epoch 39/100
+ - 616s - loss: 1.6133 - split0_123_loss: 0.7044 - split01_23_loss: 0.4984 - split012_3_loss: 0.4105 - val_loss: 0.7701 - val_split0_123_loss: 0.3554 - val_split01_23_loss: 0.2514 - val_split012_3_loss: 0.1633
+AUC_split0_123: 0.9206
+AUC_split01_23: 0.9578
+AUC_split012_3: 0.9711
+Mean AUC: 0.9498
+
+Epoch 40/100
+ - 617s - loss: 1.5824 - split0_123_loss: 0.6951 - split01_23_loss: 0.4767 - split012_3_loss: 0.4106 - val_loss: 0.7823 - val_split0_123_loss: 0.3803 - val_split01_23_loss: 0.2342 - val_split012_3_loss: 0.1678
+AUC_split0_123: 0.9117
+AUC_split01_23: 0.9526
+AUC_split012_3: 0.9646
+Mean AUC: 0.9429
+
+Epoch 41/100
+ - 616s - loss: 1.5809 - split0_123_loss: 0.6876 - split01_23_loss: 0.4885 - split012_3_loss: 0.4048 - val_loss: 1.1553 - val_split0_123_loss: 0.4453 - val_split01_23_loss: 0.4882 - val_split012_3_loss: 0.2218
+AUC_split0_123: 0.9051
+AUC_split01_23: 0.9542
+AUC_split012_3: 0.9699
+Mean AUC: 0.9431
+
+Epoch 42/100
+ - 625s - loss: 1.5856 - split0_123_loss: 0.6881 - split01_23_loss: 0.4817 - split012_3_loss: 0.4158 - val_loss: 0.9716 - val_split0_123_loss: 0.5202 - val_split01_23_loss: 0.3201 - val_split012_3_loss: 0.1313
+AUC_split0_123: 0.8988
+AUC_split01_23: 0.9488
+AUC_split012_3: 0.9697
+Mean AUC: 0.9391
+
+Epoch 43/100
+ - 667s - loss: 1.5547 - split0_123_loss: 0.6735 - split01_23_loss: 0.4717 - split012_3_loss: 0.4095 - val_loss: 0.7157 - val_split0_123_loss: 0.3809 - val_split01_23_loss: 0.2057 - val_split012_3_loss: 0.1291
+AUC_split0_123: 0.9182
+AUC_split01_23: 0.9620
+AUC_split012_3: 0.9710
+Mean AUC: 0.9504
+
+Epoch 44/100
+ - 617s - loss: 1.5404 - split0_123_loss: 0.6817 - split01_23_loss: 0.4607 - split012_3_loss: 0.3980 - val_loss: 0.8045 - val_split0_123_loss: 0.3676 - val_split01_23_loss: 0.2096 - val_split012_3_loss: 0.2274
+AUC_split0_123: 0.9118
+AUC_split01_23: 0.9640
+AUC_split012_3: 0.9739
+Mean AUC: 0.9499
+
+Epoch 45/100
+ - 616s - loss: 1.5403 - split0_123_loss: 0.6754 - split01_23_loss: 0.4821 - split012_3_loss: 0.3828 - val_loss: 0.9625 - val_split0_123_loss: 0.3752 - val_split01_23_loss: 0.2718 - val_split012_3_loss: 0.3156
+AUC_split0_123: 0.9264
+AUC_split01_23: 0.9654
+AUC_split012_3: 0.9727
+Mean AUC: 0.9548
+
+Epoch 46/100
+ - 615s - loss: 1.5471 - split0_123_loss: 0.6822 - split01_23_loss: 0.4718 - split012_3_loss: 0.3931 - val_loss: 0.8058 - val_split0_123_loss: 0.4001 - val_split01_23_loss: 0.2255 - val_split012_3_loss: 0.1802
+AUC_split0_123: 0.9152
+AUC_split01_23: 0.9622
+AUC_split012_3: 0.9727
+Mean AUC: 0.9500
+
+Epoch 47/100
+ - 618s - loss: 1.5333 - split0_123_loss: 0.6705 - split01_23_loss: 0.4681 - split012_3_loss: 0.3947 - val_loss: 0.8600 - val_split0_123_loss: 0.4336 - val_split01_23_loss: 0.2578 - val_split012_3_loss: 0.1686
+AUC_split0_123: 0.9019
+AUC_split01_23: 0.9423
+AUC_split012_3: 0.9589
+Mean AUC: 0.9344
+
+Epoch 48/100
+ - 616s - loss: 1.5055 - split0_123_loss: 0.6784 - split01_23_loss: 0.4568 - split012_3_loss: 0.3703 - val_loss: 0.8000 - val_split0_123_loss: 0.3813 - val_split01_23_loss: 0.2572 - val_split012_3_loss: 0.1615
+AUC_split0_123: 0.9132
+AUC_split01_23: 0.9419
+AUC_split012_3: 0.9499
+Mean AUC: 0.9350
+
+Epoch 49/100
+ - 616s - loss: 1.5204 - split0_123_loss: 0.6730 - split01_23_loss: 0.4665 - split012_3_loss: 0.3808 - val_loss: 0.7971 - val_split0_123_loss: 0.3816 - val_split01_23_loss: 0.2466 - val_split012_3_loss: 0.1690
+AUC_split0_123: 0.9192
+AUC_split01_23: 0.9645
+AUC_split012_3: 0.9725
+Mean AUC: 0.9521
+
+Epoch 50/100
+ - 616s - loss: 1.5303 - split0_123_loss: 0.6794 - split01_23_loss: 0.4719 - split012_3_loss: 0.3791 - val_loss: 0.7383 - val_split0_123_loss: 0.3927 - val_split01_23_loss: 0.1978 - val_split012_3_loss: 0.1478
+AUC_split0_123: 0.9142
+AUC_split01_23: 0.9650
+AUC_split012_3: 0.9746
+Mean AUC: 0.9513
+
+Epoch 51/100
+ - 615s - loss: 1.5134 - split0_123_loss: 0.6705 - split01_23_loss: 0.4498 - split012_3_loss: 0.3931 - val_loss: 0.8644 - val_split0_123_loss: 0.4985 - val_split01_23_loss: 0.2377 - val_split012_3_loss: 0.1282
+AUC_split0_123: 0.9124
+AUC_split01_23: 0.9551
+AUC_split012_3: 0.9706
+Mean AUC: 0.9460
+
+Epoch 52/100
+ - 615s - loss: 1.4844 - split0_123_loss: 0.6556 - split01_23_loss: 0.4543 - split012_3_loss: 0.3744 - val_loss: 0.8655 - val_split0_123_loss: 0.4744 - val_split01_23_loss: 0.2227 - val_split012_3_loss: 0.1683
+AUC_split0_123: 0.9116
+AUC_split01_23: 0.9585
+AUC_split012_3: 0.9701
+Mean AUC: 0.9467
+
+Epoch 53/100
+ - 616s - loss: 1.4730 - split0_123_loss: 0.6612 - split01_23_loss: 0.4442 - split012_3_loss: 0.3676 - val_loss: 0.9372 - val_split0_123_loss: 0.4356 - val_split01_23_loss: 0.3753 - val_split012_3_loss: 0.1262
+AUC_split0_123: 0.9108
+AUC_split01_23: 0.9521
+AUC_split012_3: 0.9709
+Mean AUC: 0.9446
+
+Epoch 54/100
+ - 615s - loss: 1.7443 - split0_123_loss: 0.7717 - split01_23_loss: 0.5322 - split012_3_loss: 0.4404 - val_loss: 0.8506 - val_split0_123_loss: 0.3758 - val_split01_23_loss: 0.3051 - val_split012_3_loss: 0.1697
+AUC_split0_123: 0.9171
+AUC_split01_23: 0.9614
+AUC_split012_3: 0.9757
+Mean AUC: 0.9514
+
+Epoch 55/100
+ - 615s - loss: 1.4960 - split0_123_loss: 0.6656 - split01_23_loss: 0.4534 - split012_3_loss: 0.3770 - val_loss: 0.7547 - val_split0_123_loss: 0.3684 - val_split01_23_loss: 0.2498 - val_split012_3_loss: 0.1365
+AUC_split0_123: 0.9177
+AUC_split01_23: 0.9547
+AUC_split012_3: 0.9699
+Mean AUC: 0.9474
+
+Epoch 56/100
+ - 615s - loss: 1.4802 - split0_123_loss: 0.6571 - split01_23_loss: 0.4549 - split012_3_loss: 0.3682 - val_loss: 0.7568 - val_split0_123_loss: 0.3672 - val_split01_23_loss: 0.2215 - val_split012_3_loss: 0.1681
+AUC_split0_123: 0.9161
+AUC_split01_23: 0.9614
+AUC_split012_3: 0.9714
+Mean AUC: 0.9496
+
+Epoch 57/100
+ - 616s - loss: 1.4736 - split0_123_loss: 0.6537 - split01_23_loss: 0.4425 - split012_3_loss: 0.3774 - val_loss: 0.8434 - val_split0_123_loss: 0.3864 - val_split01_23_loss: 0.2357 - val_split012_3_loss: 0.2213
+AUC_split0_123: 0.9140
+AUC_split01_23: 0.9650
+AUC_split012_3: 0.9785
+Mean AUC: 0.9525
+
+Epoch 58/100
+ - 616s - loss: 1.4344 - split0_123_loss: 0.6378 - split01_23_loss: 0.4325 - split012_3_loss: 0.3640 - val_loss: 0.7570 - val_split0_123_loss: 0.3963 - val_split01_23_loss: 0.2155 - val_split012_3_loss: 0.1452
+AUC_split0_123: 0.9103
+AUC_split01_23: 0.9599
+AUC_split012_3: 0.9729
+Mean AUC: 0.9477
+
+Epoch 59/100
+ - 618s - loss: 1.4296 - split0_123_loss: 0.6420 - split01_23_loss: 0.4310 - split012_3_loss: 0.3566 - val_loss: 0.8622 - val_split0_123_loss: 0.4441 - val_split01_23_loss: 0.2662 - val_split012_3_loss: 0.1519
+AUC_split0_123: 0.9009
+AUC_split01_23: 0.9504
+AUC_split012_3: 0.9606
+Mean AUC: 0.9373
+
+Epoch 60/100
+ - 621s - loss: 1.4809 - split0_123_loss: 0.6690 - split01_23_loss: 0.4366 - split012_3_loss: 0.3754 - val_loss: 0.7581 - val_split0_123_loss: 0.3749 - val_split01_23_loss: 0.2348 - val_split012_3_loss: 0.1484
+AUC_split0_123: 0.9089
+AUC_split01_23: 0.9531
+AUC_split012_3: 0.9643
+Mean AUC: 0.9421
+
+Epoch 61/100
+ - 615s - loss: 1.4589 - split0_123_loss: 0.6567 - split01_23_loss: 0.4360 - split012_3_loss: 0.3662 - val_loss: 0.7454 - val_split0_123_loss: 0.3740 - val_split01_23_loss: 0.2173 - val_split012_3_loss: 0.1541
+AUC_split0_123: 0.9192
+AUC_split01_23: 0.9583
+AUC_split012_3: 0.9704
+Mean AUC: 0.9493
+
+Epoch 62/100
+ - 616s - loss: 1.4382 - split0_123_loss: 0.6465 - split01_23_loss: 0.4352 - split012_3_loss: 0.3565 - val_loss: 0.8288 - val_split0_123_loss: 0.4066 - val_split01_23_loss: 0.2497 - val_split012_3_loss: 0.1724
+AUC_split0_123: 0.9255
+AUC_split01_23: 0.9658
+AUC_split012_3: 0.9749
+Mean AUC: 0.9554
+
+Epoch 63/100
+ - 615s - loss: 1.4573 - split0_123_loss: 0.6597 - split01_23_loss: 0.4368 - split012_3_loss: 0.3609 - val_loss: 0.8432 - val_split0_123_loss: 0.3810 - val_split01_23_loss: 0.2620 - val_split012_3_loss: 0.2002
+AUC_split0_123: 0.9196
+AUC_split01_23: 0.9648
+AUC_split012_3: 0.9744
+Mean AUC: 0.9529
+
+Epoch 64/100
+ - 615s - loss: 1.4161 - split0_123_loss: 0.6318 - split01_23_loss: 0.4287 - split012_3_loss: 0.3556 - val_loss: 1.0902 - val_split0_123_loss: 0.3714 - val_split01_23_loss: 0.2669 - val_split012_3_loss: 0.4519
+AUC_split0_123: 0.9150
+AUC_split01_23: 0.9635
+AUC_split012_3: 0.9707
+Mean AUC: 0.9497
+
+Epoch 65/100
+ - 615s - loss: 1.4286 - split0_123_loss: 0.6447 - split01_23_loss: 0.4326 - split012_3_loss: 0.3513 - val_loss: 0.7712 - val_split0_123_loss: 0.3883 - val_split01_23_loss: 0.2186 - val_split012_3_loss: 0.1643
+AUC_split0_123: 0.9144
+AUC_split01_23: 0.9652
+AUC_split012_3: 0.9762
+Mean AUC: 0.9519
+
+Epoch 66/100
+ - 616s - loss: 1.4108 - split0_123_loss: 0.6280 - split01_23_loss: 0.4306 - split012_3_loss: 0.3523 - val_loss: 0.7150 - val_split0_123_loss: 0.3943 - val_split01_23_loss: 0.2104 - val_split012_3_loss: 0.1104
+AUC_split0_123: 0.9222
+AUC_split01_23: 0.9569
+AUC_split012_3: 0.9721
+Mean AUC: 0.9504
+
+Epoch 67/100
+ - 615s - loss: 1.3820 - split0_123_loss: 0.6239 - split01_23_loss: 0.4199 - split012_3_loss: 0.3383 - val_loss: 0.7192 - val_split0_123_loss: 0.3522 - val_split01_23_loss: 0.2119 - val_split012_3_loss: 0.1551
+AUC_split0_123: 0.9210
+AUC_split01_23: 0.9620
+AUC_split012_3: 0.9714
+Mean AUC: 0.9515
+
+Epoch 68/100
+ - 616s - loss: 1.3933 - split0_123_loss: 0.6291 - split01_23_loss: 0.4146 - split012_3_loss: 0.3496 - val_loss: 0.9701 - val_split0_123_loss: 0.4013 - val_split01_23_loss: 0.4196 - val_split012_3_loss: 0.1491
+AUC_split0_123: 0.9111
+AUC_split01_23: 0.9531
+AUC_split012_3: 0.9691
+Mean AUC: 0.9444
+
+Epoch 69/100
+ - 616s - loss: 1.3875 - split0_123_loss: 0.6222 - split01_23_loss: 0.4255 - split012_3_loss: 0.3398 - val_loss: 0.7593 - val_split0_123_loss: 0.3773 - val_split01_23_loss: 0.2315 - val_split012_3_loss: 0.1505
+AUC_split0_123: 0.9195
+AUC_split01_23: 0.9595
+AUC_split012_3: 0.9659
+Mean AUC: 0.9483
+
+Epoch 70/100
+ - 617s - loss: 1.3722 - split0_123_loss: 0.6215 - split01_23_loss: 0.4059 - split012_3_loss: 0.3448 - val_loss: 0.8006 - val_split0_123_loss: 0.3838 - val_split01_23_loss: 0.2266 - val_split012_3_loss: 0.1901
+AUC_split0_123: 0.9102
+AUC_split01_23: 0.9574
+AUC_split012_3: 0.9683
+Mean AUC: 0.9453
+
+Epoch 71/100
+ - 616s - loss: 1.3826 - split0_123_loss: 0.6238 - split01_23_loss: 0.4208 - split012_3_loss: 0.3380 - val_loss: 0.9158 - val_split0_123_loss: 0.4653 - val_split01_23_loss: 0.2416 - val_split012_3_loss: 0.2090
+AUC_split0_123: 0.9087
+AUC_split01_23: 0.9519
+AUC_split012_3: 0.9672
+Mean AUC: 0.9426
+
+Epoch 72/100
+ - 616s - loss: 1.3536 - split0_123_loss: 0.6261 - split01_23_loss: 0.4015 - split012_3_loss: 0.3261 - val_loss: 0.7878 - val_split0_123_loss: 0.3938 - val_split01_23_loss: 0.2401 - val_split012_3_loss: 0.1538
+AUC_split0_123: 0.9117
+AUC_split01_23: 0.9497
+AUC_split012_3: 0.9681
+Mean AUC: 0.9432
+
+Epoch 73/100
+ - 616s - loss: 1.3599 - split0_123_loss: 0.6209 - split01_23_loss: 0.4065 - split012_3_loss: 0.3325 - val_loss: 0.7416 - val_split0_123_loss: 0.3450 - val_split01_23_loss: 0.2176 - val_split012_3_loss: 0.1789
+AUC_split0_123: 0.9243
+AUC_split01_23: 0.9628
+AUC_split012_3: 0.9748
+Mean AUC: 0.9540
+
+Epoch 74/100
+ - 615s - loss: 1.3465 - split0_123_loss: 0.6171 - split01_23_loss: 0.3977 - split012_3_loss: 0.3316 - val_loss: 0.7558 - val_split0_123_loss: 0.3894 - val_split01_23_loss: 0.2426 - val_split012_3_loss: 0.1237
+AUC_split0_123: 0.9198
+AUC_split01_23: 0.9562
+AUC_split012_3: 0.9703
+Mean AUC: 0.9488
+
+Epoch 75/100
+ - 615s - loss: 1.3861 - split0_123_loss: 0.6227 - split01_23_loss: 0.4263 - split012_3_loss: 0.3371 - val_loss: 0.8834 - val_split0_123_loss: 0.3632 - val_split01_23_loss: 0.3401 - val_split012_3_loss: 0.1801
+AUC_split0_123: 0.9252
+AUC_split01_23: 0.9589
+AUC_split012_3: 0.9672
+Mean AUC: 0.9504
+
+Epoch 76/100
+ - 615s - loss: 1.3729 - split0_123_loss: 0.6246 - split01_23_loss: 0.4099 - split012_3_loss: 0.3384 - val_loss: 1.0388 - val_split0_123_loss: 0.4779 - val_split01_23_loss: 0.2664 - val_split012_3_loss: 0.2944
+AUC_split0_123: 0.9171
+AUC_split01_23: 0.9634
+AUC_split012_3: 0.9691
+Mean AUC: 0.9499
+
+Epoch 77/100
+ - 616s - loss: 1.3765 - split0_123_loss: 0.6386 - split01_23_loss: 0.4077 - split012_3_loss: 0.3302 - val_loss: 0.7660 - val_split0_123_loss: 0.3954 - val_split01_23_loss: 0.2034 - val_split012_3_loss: 0.1672
+AUC_split0_123: 0.9194
+AUC_split01_23: 0.9679
+AUC_split012_3: 0.9769
+Mean AUC: 0.9547
+
+Epoch 78/100
+ - 615s - loss: 1.2962 - split0_123_loss: 0.5973 - split01_23_loss: 0.3932 - split012_3_loss: 0.3057 - val_loss: 0.7384 - val_split0_123_loss: 0.3908 - val_split01_23_loss: 0.2052 - val_split012_3_loss: 0.1424
+AUC_split0_123: 0.9185
+AUC_split01_23: 0.9649
+AUC_split012_3: 0.9769
+Mean AUC: 0.9534
+
+Epoch 79/100
+ - 618s - loss: 1.3175 - split0_123_loss: 0.5945 - split01_23_loss: 0.4005 - split012_3_loss: 0.3225 - val_loss: 0.7659 - val_split0_123_loss: 0.4119 - val_split01_23_loss: 0.2156 - val_split012_3_loss: 0.1384
+AUC_split0_123: 0.9181
+AUC_split01_23: 0.9562
+AUC_split012_3: 0.9694
+Mean AUC: 0.9479
+
+Epoch 80/100
+ - 614s - loss: 1.2977 - split0_123_loss: 0.6007 - split01_23_loss: 0.3881 - split012_3_loss: 0.3088 - val_loss: 0.7905 - val_split0_123_loss: 0.4088 - val_split01_23_loss: 0.2481 - val_split012_3_loss: 0.1335
+AUC_split0_123: 0.9189
+AUC_split01_23: 0.9623
+AUC_split012_3: 0.9659
+Mean AUC: 0.9490
+
+Epoch 81/100
+ - 615s - loss: 1.2955 - split0_123_loss: 0.5970 - split01_23_loss: 0.3848 - split012_3_loss: 0.3137 - val_loss: 0.7611 - val_split0_123_loss: 0.3802 - val_split01_23_loss: 0.2422 - val_split012_3_loss: 0.1387
+AUC_split0_123: 0.9209
+AUC_split01_23: 0.9657
+AUC_split012_3: 0.9686
+Mean AUC: 0.9517
+
+Epoch 82/100
+ - 617s - loss: 1.3119 - split0_123_loss: 0.5985 - split01_23_loss: 0.3909 - split012_3_loss: 0.3226 - val_loss: 0.7602 - val_split0_123_loss: 0.3930 - val_split01_23_loss: 0.2302 - val_split012_3_loss: 0.1370
+AUC_split0_123: 0.9169
+AUC_split01_23: 0.9566
+AUC_split012_3: 0.9665
+Mean AUC: 0.9467
+
+Epoch 83/100
+ - 616s - loss: 1.2888 - split0_123_loss: 0.5998 - split01_23_loss: 0.3852 - split012_3_loss: 0.3038 - val_loss: 0.7689 - val_split0_123_loss: 0.3871 - val_split01_23_loss: 0.2405 - val_split012_3_loss: 0.1413
+AUC_split0_123: 0.9083
+AUC_split01_23: 0.9502
+AUC_split012_3: 0.9681
+Mean AUC: 0.9422
+
+Epoch 84/100
+ - 616s - loss: 1.3256 - split0_123_loss: 0.6033 - split01_23_loss: 0.3876 - split012_3_loss: 0.3346 - val_loss: 0.9779 - val_split0_123_loss: 0.5320 - val_split01_23_loss: 0.2821 - val_split012_3_loss: 0.1637
+AUC_split0_123: 0.9136
+AUC_split01_23: 0.9490
+AUC_split012_3: 0.9625
+Mean AUC: 0.9417
+
+Epoch 85/100
+ - 651s - loss: 1.2523 - split0_123_loss: 0.5884 - split01_23_loss: 0.3659 - split012_3_loss: 0.2980 - val_loss: 0.8154 - val_split0_123_loss: 0.4392 - val_split01_23_loss: 0.2323 - val_split012_3_loss: 0.1439
+AUC_split0_123: 0.9074
+AUC_split01_23: 0.9577
+AUC_split012_3: 0.9710
+Mean AUC: 0.9454
+
+Epoch 86/100
+ - 616s - loss: 1.2722 - split0_123_loss: 0.5997 - split01_23_loss: 0.3816 - split012_3_loss: 0.2910 - val_loss: 0.8045 - val_split0_123_loss: 0.3789 - val_split01_23_loss: 0.2456 - val_split012_3_loss: 0.1800
+AUC_split0_123: 0.9136
+AUC_split01_23: 0.9581
+AUC_split012_3: 0.9710
+Mean AUC: 0.9476
+
+Epoch 87/100
+ - 616s - loss: 1.2618 - split0_123_loss: 0.5800 - split01_23_loss: 0.3764 - split012_3_loss: 0.3053 - val_loss: 0.7835 - val_split0_123_loss: 0.3611 - val_split01_23_loss: 0.2459 - val_split012_3_loss: 0.1765
+AUC_split0_123: 0.9251
+AUC_split01_23: 0.9644
+AUC_split012_3: 0.9737
+Mean AUC: 0.9544
+
+Epoch 88/100
+ - 616s - loss: 1.2757 - split0_123_loss: 0.5860 - split01_23_loss: 0.3794 - split012_3_loss: 0.3103 - val_loss: 0.7575 - val_split0_123_loss: 0.3779 - val_split01_23_loss: 0.2315 - val_split012_3_loss: 0.1480
+AUC_split0_123: 0.9149
+AUC_split01_23: 0.9605
+AUC_split012_3: 0.9698
+Mean AUC: 0.9484
+
+Epoch 89/100
+ - 616s - loss: 1.3062 - split0_123_loss: 0.6006 - split01_23_loss: 0.3756 - split012_3_loss: 0.3300 - val_loss: 0.8101 - val_split0_123_loss: 0.4097 - val_split01_23_loss: 0.2653 - val_split012_3_loss: 0.1351
+AUC_split0_123: 0.9045
+AUC_split01_23: 0.9581
+AUC_split012_3: 0.9685
+Mean AUC: 0.9437
+
+Epoch 90/100
+ - 615s - loss: 1.2510 - split0_123_loss: 0.5766 - split01_23_loss: 0.3796 - split012_3_loss: 0.2949 - val_loss: 0.8246 - val_split0_123_loss: 0.3894 - val_split01_23_loss: 0.2879 - val_split012_3_loss: 0.1473
+AUC_split0_123: 0.9192
+AUC_split01_23: 0.9538
+AUC_split012_3: 0.9665
+Mean AUC: 0.9465
+
+Epoch 91/100
+ - 636s - loss: 1.2382 - split0_123_loss: 0.5742 - split01_23_loss: 0.3533 - split012_3_loss: 0.3107 - val_loss: 2.6766 - val_split0_123_loss: 1.4602 - val_split01_23_loss: 0.6051 - val_split012_3_loss: 0.6112
+AUC_split0_123: 0.8288
+AUC_split01_23: 0.8950
+AUC_split012_3: 0.9083
+Mean AUC: 0.8773
+
+Epoch 92/100
+ - 617s - loss: 1.3557 - split0_123_loss: 0.6200 - split01_23_loss: 0.4031 - split012_3_loss: 0.3326 - val_loss: 0.8931 - val_split0_123_loss: 0.3751 - val_split01_23_loss: 0.2635 - val_split012_3_loss: 0.2545
+AUC_split0_123: 0.9248
+AUC_split01_23: 0.9629
+AUC_split012_3: 0.9745
+Mean AUC: 0.9541
+
+Epoch 93/100
+ - 616s - loss: 1.2255 - split0_123_loss: 0.5684 - split01_23_loss: 0.3713 - split012_3_loss: 0.2858 - val_loss: 0.8312 - val_split0_123_loss: 0.3803 - val_split01_23_loss: 0.3121 - val_split012_3_loss: 0.1388
+AUC_split0_123: 0.9231
+AUC_split01_23: 0.9585
+AUC_split012_3: 0.9706
+Mean AUC: 0.9507
+
+Epoch 94/100
+ - 616s - loss: 1.2035 - split0_123_loss: 0.5679 - split01_23_loss: 0.3517 - split012_3_loss: 0.2839 - val_loss: 0.8167 - val_split0_123_loss: 0.3776 - val_split01_23_loss: 0.2216 - val_split012_3_loss: 0.2176
+AUC_split0_123: 0.9122
+AUC_split01_23: 0.9613
+AUC_split012_3: 0.9715
+Mean AUC: 0.9483
+
+Epoch 95/100
+ - 616s - loss: 1.2270 - split0_123_loss: 0.5733 - split01_23_loss: 0.3611 - split012_3_loss: 0.2927 - val_loss: 0.9067 - val_split0_123_loss: 0.4099 - val_split01_23_loss: 0.2784 - val_split012_3_loss: 0.2184
+AUC_split0_123: 0.9132
+AUC_split01_23: 0.9548
+AUC_split012_3: 0.9706
+Mean AUC: 0.9462
+
+Epoch 96/100
+ - 615s - loss: 1.2127 - split0_123_loss: 0.5625 - split01_23_loss: 0.3575 - split012_3_loss: 0.2927 - val_loss: 0.8180 - val_split0_123_loss: 0.3928 - val_split01_23_loss: 0.2844 - val_split012_3_loss: 0.1408
+Using TensorFlow backend.
+AUC_split0_123: 0.9219
+AUC_split01_23: 0.9572
+AUC_split012_3: 0.9733
+Mean AUC: 0.9508
+
