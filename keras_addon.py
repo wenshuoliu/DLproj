@@ -342,7 +342,7 @@ class AUCCheckPoint(keras.callbacks.Callback):
         self.val_itr = validation_itr
         self.val_y = validation_y
         self.val_x = validation_x
-        self.auc_output_idx = auc_output_idx #the index of output who need to calculate AUC
+        self.auc_output_idx = auc_output_idx #the indices of outputs who need to calculate AUC, a list
                                 
     def on_train_begin(self, logs={}):
         #if initialized by image frame iterator, generate the val_y as a defaultdict first:

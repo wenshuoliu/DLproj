@@ -2,7 +2,7 @@
 
 #### PBS preamble
 
-#PBS -N MIMIC_hypertune1
+#PBS -N MIMIC_hypertune9
 
 #PBS -M wsliu@umich.edu
 #PBS -m abe
@@ -24,4 +24,4 @@ if [ -n "$PBS_NODEFILE" ]; then cat $PBS_NODEFILE; fi
 if [ -n "$PBS_O_WORKDIR" ]; then cd $PBS_O_WORKDIR; fi
 
 #  Put your job commands here:
-sh hypertune1.sh
+sh hypertune9.sh

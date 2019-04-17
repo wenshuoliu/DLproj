@@ -20,6 +20,7 @@ parser.add_argument('--count_cap', type=int, default=100)
 parser.add_argument('--code_rarecutpoint', type=int, default=10)
 #parser.add_argument('--clean_df', type=int, default=0, help='whether remove the patients with rare codes')
 parser.add_argument('--class_weight', type=float, default=1.)
+parser.add_argument('--semi_proportion', type=float, default=1., help='proportion of training data with labels')
 
 parser.add_argument('--job_index', type=int, default=0)
 
@@ -42,6 +43,7 @@ count_cap = args.count_cap
 code_rarecutpoint = args.code_rarecutpoint
 #clean_df = args.clean_df
 minor_class_weight = args.class_weight
+semi_proportion = args.semi_proportion
 
 job_index = args.job_index
 
@@ -115,6 +117,7 @@ clean_df = clean_df.loc[(clean_df[PRs] != 'missing').sum(axis=1)>0]
         
 all_df = clean_df.reset_index(drop=True)
 n_sample = len(all_df)
+n_code = len(code_cat)-1
 
 int_df = all_df.copy()
 for dx in DXs:
@@ -149,7 +152,8 @@ eth_mat_tst = to_categorical(eth_array_tst, num_classes=5)
 other_mat_tst = np.concatenate((continue_mat_tst, eth_mat_tst), axis=1)
 y_true = tst_df.MORTALITY_1year.values
 
-train_df = train_df0.copy()
+train_df = train_df0.sample(frac=semi_proportion).reset_index(drop=True)
+n_train_sample = len(train_df)
 y_pred_lst = []
 auc_lst = []
 auc_freeze_lst = []
@@ -258,4 +262,4 @@ auc_freeze_mean = np.mean(auc_freeze_lst)
 #fpr, tpr, _ = roc_curve(y_true, y_pred_avg)
 #auc_avg = auc(fpr, tpr)
 with open(result_file.format(job_index), 'a') as f:
-    f.write('{},{},{},{},{:.1E},{:.1E},{:.1f},{},{},{},{},{},{},{:.1f},{:.5f},{:.5f},{}\n'.format(model_name, code_embed_dim, fc_width, md_width, lr1, lr2, dropout, batchsize, embed_file, tst_seed, n_fold, count_cap, code_rarecutpoint, minor_class_weight, auc_mean, auc_freeze_mean, n_sample))
+    f.write('{},{},{},{},{:.1E},{:.1E},{:.1f},{},{},{},{},{},{},{:.1f},{:.5f},{:.5f},{},{},{:.1f},{}\n'.format(model_name, code_embed_dim, fc_width, md_width, lr1, lr2, dropout, batchsize, embed_file, tst_seed, n_fold, count_cap, code_rarecutpoint, minor_class_weight, auc_mean, auc_freeze_mean, n_sample, n_code, semi_proportion, n_train_sample))

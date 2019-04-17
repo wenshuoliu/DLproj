@@ -6,3 +6,5 @@ plots/
 __pycache__/
 */.ipynb_checkpoints/
 */debug.ipynb
+*/recycle/
+NRD/Wenyi/hypertune/recycle/
