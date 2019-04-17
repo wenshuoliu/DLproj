@@ -69,11 +69,12 @@ n_PR = 15
 DXs = ['DX'+str(n) for n in range(2, n_DX+2)]
 PRs = ['PR'+str(n) for n in range(1, n_PR+1)]
     
-all_df = pd.read_csv(path+'cohorts/{}/{}_pred.csv'.format(cohort, cohort), dtype=core_dtypes_pd)
-preprocessed = preprocess(all_df, DX_rarecutpoint=10, PR_rarecutpoint=10)
+folder = 'elder/'
+all_df = pd.read_csv(path+folder+'cohorts10/{}/pred_comorb.csv'.format(cohort), dtype=core_dtypes_pd)
+preprocessed = preprocess(all_df, DX_rarecutpoint=DX_rarecutpoint, PR_rarecutpoint=PR_rarecutpoint)
 all_df = preprocessed['int_df']
 
-tst_key = pd.read_csv(path+'cohorts/{}/tst_key{}.csv'.format(cohort, tst_seed), names = ['KEY_NRD'])
+tst_key = pd.read_csv(path+folder+'cohorts10/{}/tst_key{}.csv'.format(cohort, tst_seed), names = ['KEY_NRD'])
 tst_df = all_df.loc[all_df.KEY_NRD.isin(tst_key.KEY_NRD)]
 train_df0 = all_df.loc[~all_df.KEY_NRD.isin(tst_key.KEY_NRD)].reset_index()
 
@@ -88,8 +89,8 @@ code_cat = preprocessed['code_cat']
 hosp_cat = preprocessed['hosp_cat']
 age_mean = train_df0['AGE'].mean()
 age_std = train_df0['AGE'].std()
-los_mean = train_df0['LOS'].mean()
-los_std = train_df0['LOS'].std()
+#los_mean = train_df0['LOS'].mean()
+#los_std = train_df0['LOS'].std()
 
 code_mat_tst = tst_df[['DX1']+DXs+PRs].values
 code_ohe_tst = np.zeros((len(tst_df), len(code_cat)))
@@ -105,13 +106,16 @@ for j, hosp in enumerate(hosp_array_tst):
     
 demo_mat_tst = tst_df[['AGE', 'FEMALE']].values
 demo_mat_tst[:, 0] = (demo_mat_tst[:, 0]-age_mean)/age_std
-pay1_mat_tst = to_categorical(tst_df.PAY1.values)[:, 1:]
-los_array_tst = (tst_df.LOS.values - los_mean)/los_std
-ed_mat_tst = to_categorical(tst_df.HCUP_ED.values)
-zipinc_mat_tst = to_categorical(tst_df.ZIPINC_QRTL.values)[:, 1:]
-transfer_mat_tst = to_categorical(tst_df.SAMEDAYEVENT.values)
-other_mat_tst = np.concatenate((demo_mat_tst, pay1_mat_tst, los_array_tst.reshape(los_array_tst.shape+(1,)), 
-                                ed_mat_tst, zipinc_mat_tst, transfer_mat_tst), axis=1)
+#pay1_mat_tst = to_categorical(tst_df.PAY1.values)[:, 1:]
+#los_array_tst = (tst_df.LOS.values - los_mean)/los_std
+#ed_mat_tst = to_categorical(tst_df.HCUP_ED.values)
+#zipinc_mat_tst = to_categorical(tst_df.ZIPINC_QRTL.values)[:, 1:]
+#transfer_mat_tst = to_categorical(tst_df.SAMEDAYEVENT.values)
+#other_pred==0
+other_mat_tst = demo_mat_tst
+#other_pred==1
+#other_mat_tst = np.concatenate((demo_mat_tst, pay1_mat_tst, los_array_tst.reshape(los_array_tst.shape+(1,)), 
+#                                ed_mat_tst, zipinc_mat_tst, transfer_mat_tst), axis=1)
 y_true = tst_df.readm30.astype(int).values
 
 #split trn/val data, do a n_fold validation
@@ -141,13 +145,14 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
     
     demo_mat_train = train_df[['AGE', 'FEMALE']].values
     demo_mat_train[:, 0] = (demo_mat_train[:, 0]-age_mean)/age_std
-    pay1_mat_train = to_categorical(train_df.PAY1.values)[:, 1:]
-    los_array_train = (train_df.LOS.values - los_mean)/los_std
-    ed_mat_train = to_categorical(train_df.HCUP_ED.values)
-    zipinc_mat_train = to_categorical(train_df.ZIPINC_QRTL.values)[:, 1:]
-    transfer_mat_train = to_categorical(train_df.SAMEDAYEVENT.values)
-    other_mat_train = np.concatenate((demo_mat_train, pay1_mat_train, los_array_train.reshape(los_array_train.shape+(1,)), 
-                                    ed_mat_train, zipinc_mat_train, transfer_mat_train), axis=1)
+    #pay1_mat_train = to_categorical(train_df.PAY1.values)[:, 1:]
+    #los_array_train = (train_df.LOS.values - los_mean)/los_std
+    #ed_mat_train = to_categorical(train_df.HCUP_ED.values)
+    #zipinc_mat_train = to_categorical(train_df.ZIPINC_QRTL.values)[:, 1:]
+    #transfer_mat_train = to_categorical(train_df.SAMEDAYEVENT.values)
+    other_mat_train = demo_mat_train
+    #other_mat_train = np.concatenate((demo_mat_train, pay1_mat_train, los_array_train.reshape(los_array_train.shape+(1,)), 
+    #                                ed_mat_train, zipinc_mat_train, transfer_mat_train), axis=1)
 
     other_mat_trn = other_mat_train[trn_idx, :]
     other_mat_val = other_mat_train[val_idx, :]
@@ -175,7 +180,8 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=K.epsilon())
     earlystop = EarlyStopping(monitor='val_loss', patience=10)
     
-    class_weight = {0:(Y_trn.shape[0]/sum(Y_trn[:, 0])), 1:(Y_trn.shape[0]/sum(Y_trn[:, 1]))}
+    #class_weight = {0:(Y_trn.shape[0]/sum(Y_trn[:, 0])), 1:(Y_trn.shape[0]/sum(Y_trn[:, 1]))}
+    class_weight = {0:1., 1:1.}
     
     hist = model.fit([code_ohe_trn, hosp_ohe_trn, other_mat_trn], Y_trn, 
                      batch_size=batchsize, epochs=10, callbacks=[auccheckpoint, reduce_lr, earlystop], class_weight=class_weight, 
@@ -192,7 +198,7 @@ for trn_idx, val_idx in skf.split(train_df0, train_df0.HOSP_NRD):
 auc_mean = np.mean(auc_lst)
 y_pred_mat = np.column_stack(y_pred_lst)
 now = datetime.now().strftime('%y_%m_%d_%I_%M_%S')
-y_pred_file = 'output/y_pred_mat'+now+'.npy'
+y_pred_file = path+'y_pred_mat/y_pred_mat'+now+'.npy'
 np.save(y_pred_file, y_pred_mat)
 y_pred_avg = y_pred_mat.mean(axis=1)
 fpr, tpr, _ = roc_curve(y_true, y_pred_avg)
