@@ -11,7 +11,7 @@ from scipy.interpolate import interp1d
 import matplotlib
 import seaborn as sns
 
-def plot_roc(y_pred, y_true, classes=None, title=None, savefile=None):
+def plot_roc(y_pred, y_true, classes=None, title=None, savefile=None, n_digits=3):
     """This function plot the ROC curve and return the AUC"""
     if len(y_pred.shape)==1:
         y_pred = y_pred.reshape(y_pred.shape+(1,))
@@ -37,8 +37,7 @@ def plot_roc(y_pred, y_true, classes=None, title=None, savefile=None):
 
     for i, color in zip(range(n_classes), colors):
         plt.plot(fpr[i], tpr[i], color=color,
-                 label='ROC curve of {0} (area = {1:0.4f})'
-                 ''.format(legends[i], roc_auc[i]))
+                 label=('ROC curve of {0} (area = {1:0.'+str(n_digits)+'f})').format(legends[i], roc_auc[i]))
     plt.plot([0, 1], [0, 1], 'k--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
