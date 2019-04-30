@@ -22,6 +22,7 @@ parser.add_argument('--class_weight', type=float, default=1.)
 parser.add_argument('--batchsize_ratio', type=int, default=12)
 parser.add_argument('--loss_weight', type=float, default=1.)
 parser.add_argument('--semi_proportion', type=float, default=1., help='proportion of training data with labels')
+parser.add_argument('--outcome', type=str, default='MOT_1year')
 
 parser.add_argument('--job_index', type=int, default=0)
 
@@ -46,13 +47,14 @@ minor_class_weight = args.class_weight
 batchsize_ratio = args.batchsize_ratio
 loss_weight = args.loss_weight
 semi_proportion = args.semi_proportion
+outcome = args.outcome
 
 job_index = args.job_index
 
 
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split, StratifiedKFold, GroupKFold, KFold
+from sklearn.model_selection import train_test_split, StratifiedKFold, GroupKFold, KFold, GroupShuffleSplit
 from sklearn.metrics import roc_curve, auc
 import os, sys, time
 from datetime import datetime
@@ -94,13 +96,12 @@ def loss_cooccur(y_true, y_pred):
     return K.mean(K.square(y_pred - y_true)*weight_cooccur)
 
 #data reading and preprocessing
-n_DX = 30
-n_PR = 15
-DXs = ['DX'+str(n) for n in range(1, n_DX+1)]
-PRs = ['PR'+str(n) for n in range(1, n_PR+1)]
-all_df = pd.read_csv(path+'MIMIC3_Updated_include.csv')
-all_df = all_df.drop(columns=['PR'+str(j) for j in range(15, 40)])
-all_df.columns = ['Unnamed: 0', 'HADM_ID', 'MORTALITY_1year', 'AGE', 'GENDER', 'LOS', 'Eth'] + DXs + PRs
+n_DX = 39
+n_PR = 20
+DXs = ['DX'+str(n) for n in range(n_DX)]
+PRs = ['PR'+str(n) for n in range(n_PR)]
+all_df = pd.read_csv(path+'cleaned/clean_df.csv', low_memory=False)
+all_df = all_df[['SUBJECT_ID', 'HADM_ID', 'Eth', 'GENDER', 'AGE', 'MOT_long', 'HOSP_LOS', 'MOT_1year', 'MOT_30days']+DXs+PRs]
 
 DX_series = pd.Series()
 for dx in DXs:
@@ -111,8 +112,8 @@ for pr in PRs:
 
 DX_freq = DX_series.value_counts()
 PR_freq = PR_series.value_counts()
-DX_cat = sorted(DX_freq.loc[DX_freq>=code_rarecutpoint].index)
-PR_cat = sorted(PR_freq.loc[PR_freq>=code_rarecutpoint].index)
+DX_cat = sorted(DX_freq.loc[DX_freq>code_rarecutpoint].index)
+PR_cat = sorted(PR_freq.loc[PR_freq>code_rarecutpoint].index)
 DX_in = set(DX_cat)
 PR_in = set(PR_cat)
 code_cat = ['missing'] + DX_cat + PR_cat
@@ -140,8 +141,8 @@ for pr in PRs:
     int_df[pr] = int_df[pr].map(PR_dict)
 all_df = int_df.reset_index(drop=True)
 
-kf = KFold(n_splits=5, random_state=tst_seed, shuffle=True)
-train_idx, tst_idx = next(kf.split(all_df))
+gss = GroupShuffleSplit(n_splits=1, test_size=1/n_fold, random_state=tst_seed)
+train_idx, tst_idx = next(gss.split(all_df, groups=all_df.SUBJECT_ID))
 train_df0 = all_df.loc[train_idx].reset_index(drop=True)
 tst_df = all_df.loc[tst_idx].reset_index(drop=True)
 
@@ -160,17 +161,17 @@ else:
 # Data formatting
 DX_mat_tst = tst_df[DXs].values
 PR_mat_tst = tst_df[PRs].values    
-continue_mat_tst = tst_df[['AGE', 'GENDER', 'LOS']].values
+continue_mat_tst = tst_df[['AGE', 'GENDER', 'HOSP_LOS']].values
 eth_array_tst = tst_df['Eth'].values
 eth_mat_tst = to_categorical(eth_array_tst, num_classes=5)
 other_mat_tst = np.concatenate((continue_mat_tst, eth_mat_tst), axis=1)
-y_true = tst_df.MORTALITY_1year.values
+y_true = tst_df[outcome].values
 
 train_df = train_df0.sample(frac=semi_proportion).reset_index(drop=True)
 n_train_sample = len(train_df)
 auc_lst = []
-kf2 = KFold(n_splits=n_fold, random_state=24, shuffle=True)
-trn_idx, val_idx = next(kf2.split(train_df))
+gss2 = GroupShuffleSplit(n_splits=1, test_size=1/n_fold, random_state=24)
+trn_idx, val_idx = next(gss2.split(train_df, groups=train_df.SUBJECT_ID))
 
 tst_gen = DoubleBatchGenerator(cooccur_df=cooccur_df, readm_df=tst_df, readm_batchsize=len(tst_df), 
                                batchsize_ratio=batchsize_ratio, shuffle=False)
@@ -178,7 +179,7 @@ parent_pairs = None
 if True:
     trn_df = train_df.loc[trn_idx].reset_index(drop=True)
     val_df = train_df.loc[val_idx].reset_index(drop=True)
-    trn_gen = DoubleBatchGenerator(cooccur_df=cooccur_df, readm_df=trn_df, readm_batchsize=readm_batchsize, 
+    trn_gen = DoubleBatchGenerator(cooccur_df=cooccur_df, readm_df=trn_df, readm_batchsize=readm_batchsize, outcome=outcome, 
                                batchsize_ratio=batchsize_ratio, shuffle=True)
     val_gen = DoubleBatchGenerator(cooccur_df=cooccur_df, readm_df=val_df, readm_batchsize=len(val_df), 
                                batchsize_ratio=batchsize_ratio, shuffle=False)
@@ -231,13 +232,13 @@ if True:
     
     class_weight = {'readm':{0:1., 1:minor_class_weight}}
     
-    hist = model.fit_generator(generator=trn_gen, validation_data=val_gen, epochs=80, verbose=2, 
+    hist = model.fit_generator(generator=trn_gen, validation_data=val_gen, epochs=100, verbose=2, 
                                callbacks=[auccheckpoint, reduce_lr], class_weight=class_weight)
     
     model.load_weights(model_path+'embeding_nn_temp'+str(job_index)+'.h5')
     y = model.predict_generator(tst_gen, verbose=1)
     y_pred = y[0][:, 1]
-    y_true = tst_df.MORTALITY_1year.astype(int).values
+    y_true = tst_df[outcome].astype(int).values
     fpr, tpr, _ = roc_curve(y_true, y_pred)
     roc_auc = auc(fpr, tpr)
     auc_lst.append(roc_auc)
@@ -252,4 +253,4 @@ auc_mean = np.mean(auc_lst)
 #fpr, tpr, _ = roc_curve(y_true, y_pred_avg)
 #auc_avg = auc(fpr, tpr)
 with open(result_file.format(job_index), 'a') as f:
-    f.write('{},{},{},{},{:.1E},{:.1f},{},{},{},{},{},{},{:.1f},{},{:.1f},{:.1f},{:.5f},{},{},{}\n'.format(model_name, code_embed_dim, fc_width, md_width, lr, dropout, readm_batchsize, embed_file, tst_seed, n_fold, count_cap, code_rarecutpoint, minor_class_weight, batchsize_ratio, loss_weight, semi_proportion, auc_mean, n_sample, n_code, n_train_sample))
+    f.write('{},{},{},{},{:.1E},{:.1f},{},{},{},{},{},{},{:.1f},{},{:.1f},{:.1f},{},{:.5f},{},{},{}\n'.format(model_name, code_embed_dim, fc_width, md_width, lr, dropout, readm_batchsize, embed_file, tst_seed, n_fold, count_cap, code_rarecutpoint, minor_class_weight, batchsize_ratio, loss_weight, semi_proportion, outcome, auc_mean, n_sample, n_code, n_train_sample))

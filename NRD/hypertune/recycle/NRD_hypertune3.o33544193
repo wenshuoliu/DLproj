@@ -1,0 +1,18 @@
+nyx5023
+nyx5023
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+terminate called after throwing an instance of 'std::bad_alloc'
+  what():  std::bad_alloc
+hypertune3.sh: line 9: 22311 Aborted                 (core dumped) python train_template_xgboost0425.py --lr 2e-05 --tst_seed 3 --cohort pna --dx_rarecutpoint 20 --pr_rarecutpoint 20 --result_file output/ht_result0425_{}.csv --job_index 3
+Using TensorFlow backend.
+terminate called after throwing an instance of 'std::bad_alloc'
+  what():  std::bad_alloc
+hypertune3.sh: line 11:   963 Aborted                 (core dumped) python train_template_xgboost0425.py --lr 2e-05 --tst_seed 1 --cohort pna --dx_rarecutpoint 10 --pr_rarecutpoint 10 --result_file output/ht_result0425_{}.csv --job_index 3
+Using TensorFlow backend.

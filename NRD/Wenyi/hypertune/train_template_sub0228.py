@@ -21,6 +21,7 @@ parser.add_argument('--code_rarecutpoint', type=int, default=10)
 #parser.add_argument('--clean_df', type=int, default=0, help='whether remove the patients with rare codes')
 parser.add_argument('--class_weight', type=float, default=1.)
 parser.add_argument('--semi_proportion', type=float, default=1., help='proportion of training data with labels')
+parser.add_argument('--outcome', type=str, default='MOT_1year')
 
 parser.add_argument('--job_index', type=int, default=0)
 
@@ -44,13 +45,14 @@ code_rarecutpoint = args.code_rarecutpoint
 #clean_df = args.clean_df
 minor_class_weight = args.class_weight
 semi_proportion = args.semi_proportion
+outcome = args.outcome
 
 job_index = args.job_index
 
 
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split, StratifiedKFold, GroupKFold, KFold
+from sklearn.model_selection import train_test_split, StratifiedKFold, GroupKFold, KFold, GroupShuffleSplit
 from sklearn.metrics import roc_curve, auc
 import os, sys, time
 from datetime import datetime
@@ -80,13 +82,12 @@ from utils import get_frequency, preprocess
 from glove import Glove
 from setsum_layer import SetSum, MaskedSum, MaskedDense, MaskedPooling
 
-n_DX = 30
-n_PR = 15
-DXs = ['DX'+str(n) for n in range(1, n_DX+1)]
-PRs = ['PR'+str(n) for n in range(1, n_PR+1)]
-all_df = pd.read_csv(path+'MIMIC3_Updated_include.csv')
-all_df = all_df.drop(columns=['PR'+str(j) for j in range(15, 40)])
-all_df.columns = ['Unnamed: 0', 'HADM_ID', 'MORTALITY_1year', 'AGE', 'GENDER', 'LOS', 'Eth'] + DXs + PRs
+n_DX = 39
+n_PR = 20
+DXs = ['DX'+str(n) for n in range(n_DX)]
+PRs = ['PR'+str(n) for n in range(n_PR)]
+all_df = pd.read_csv(path+'cleaned/clean_df.csv', low_memory=False)
+all_df = all_df[['SUBJECT_ID', 'HADM_ID', 'Eth', 'GENDER', 'AGE', 'MOT_long', 'HOSP_LOS', 'MOT_1year', 'MOT_30days']+DXs+PRs]
 
 DX_series = pd.Series()
 for dx in DXs:
@@ -126,8 +127,8 @@ for pr in PRs:
     int_df[pr] = int_df[pr].map(PR_dict)
 all_df = int_df.reset_index(drop=True)
 
-kf = KFold(n_splits=5, random_state=tst_seed, shuffle=True)
-train_idx, tst_idx = next(kf.split(all_df))
+gss = GroupShuffleSplit(n_splits=1, test_size=1/n_fold, random_state=tst_seed)
+train_idx, tst_idx = next(gss.split(all_df, groups=all_df.SUBJECT_ID))
 train_df0 = all_df.loc[train_idx].reset_index(drop=True)
 tst_df = all_df.loc[tst_idx].reset_index(drop=True)
 
@@ -146,19 +147,19 @@ else:
 # Data formatting
 DX_mat_tst = tst_df[DXs].values
 PR_mat_tst = tst_df[PRs].values    
-continue_mat_tst = tst_df[['AGE', 'GENDER', 'LOS']].values
+continue_mat_tst = tst_df[['AGE', 'GENDER', 'HOSP_LOS']].values
 eth_array_tst = tst_df['Eth'].values
 eth_mat_tst = to_categorical(eth_array_tst, num_classes=5)
 other_mat_tst = np.concatenate((continue_mat_tst, eth_mat_tst), axis=1)
-y_true = tst_df.MORTALITY_1year.values
+y_true = tst_df[outcome].values
 
 train_df = train_df0.sample(frac=semi_proportion).reset_index(drop=True)
 n_train_sample = len(train_df)
 y_pred_lst = []
 auc_lst = []
 auc_freeze_lst = []
-kf2 = KFold(n_splits=n_fold, random_state=24, shuffle=True)
-trn_idx, val_idx = next(kf2.split(train_df))
+gss2 = GroupShuffleSplit(n_splits=1, test_size=1/n_fold, random_state=24)
+trn_idx, val_idx = next(gss2.split(train_df, groups=train_df.SUBJECT_ID))
 if True:
     DX_mat_train = train_df[DXs].values
     DX_mat_trn = DX_mat_train[trn_idx, :]
@@ -166,13 +167,13 @@ if True:
     PR_mat_train = train_df[PRs].values        
     PR_mat_trn = PR_mat_train[trn_idx, :]
     PR_mat_val = PR_mat_train[val_idx, :]
-    continue_mat_train = train_df[['AGE', 'GENDER', 'LOS']].values
+    continue_mat_train = train_df[['AGE', 'GENDER', 'HOSP_LOS']].values
     eth_array_train = train_df['Eth'].values
     eth_mat_train = to_categorical(eth_array_train, num_classes=5)
     other_mat_train = np.concatenate((continue_mat_train, eth_mat_train), axis=1)
     other_mat_trn = other_mat_train[trn_idx, :]
     other_mat_val = other_mat_train[val_idx, :]
-    y_train = train_df.MORTALITY_1year.values
+    y_train = train_df[outcome].values
     y_trn = y_train[trn_idx]
     y_val = y_train[val_idx]
     Y_trn = to_categorical(y_train[trn_idx])
@@ -262,4 +263,4 @@ auc_freeze_mean = np.mean(auc_freeze_lst)
 #fpr, tpr, _ = roc_curve(y_true, y_pred_avg)
 #auc_avg = auc(fpr, tpr)
 with open(result_file.format(job_index), 'a') as f:
-    f.write('{},{},{},{},{:.1E},{:.1E},{:.1f},{},{},{},{},{},{},{:.1f},{:.5f},{:.5f},{},{},{:.1f},{}\n'.format(model_name, code_embed_dim, fc_width, md_width, lr1, lr2, dropout, batchsize, embed_file, tst_seed, n_fold, count_cap, code_rarecutpoint, minor_class_weight, auc_mean, auc_freeze_mean, n_sample, n_code, semi_proportion, n_train_sample))
+    f.write('{},{},{},{},{:.1E},{:.1E},{:.1f},{},{},{},{},{},{},{:.1f},{:.5f},{:.5f},{},{},{:.1f},{},{}\n'.format(model_name, code_embed_dim, fc_width, md_width, lr1, lr2, dropout, batchsize, embed_file, tst_seed, n_fold, count_cap, code_rarecutpoint, minor_class_weight, auc_mean, auc_freeze_mean, n_sample, n_code, semi_proportion, outcome, n_train_sample))

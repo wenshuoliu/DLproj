@@ -5,7 +5,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--lr', type=float, default=0.0002)
 parser.add_argument('--cohort', type=str, default='ami')
 parser.add_argument('--tst_seed', type=int, default=0, help='the seed to split training/test data')
-parser.add_argument('--val_fold', type=int, default=10, help='number of folds to split training/validation data')
 parser.add_argument('--result_file', type=str, default='output/result.csv')
 parser.add_argument('--dx_rarecutpoint', type=int, default=10)
 parser.add_argument('--pr_rarecutpoint', type=int, default=10)
@@ -16,7 +15,6 @@ args = parser.parse_args()
 lr = args.lr
 cohort = args.cohort
 tst_seed = args.tst_seed
-n_fold = args.val_fold
 result_file = args.result_file
 DX_rarecutpoint = args.dx_rarecutpoint
 PR_rarecutpoint = args.pr_rarecutpoint
@@ -72,6 +70,7 @@ code_cat = preprocessed['code_cat']
 hosp_cat = preprocessed['hosp_cat']
 age_mean = train_df0['AGE'].mean()
 age_std = train_df0['AGE'].std()
+n_code_cat = len(code_cat)
 
 code_mat_tst = tst_df[['DX1']+DXs+PRs].values
 code_ohe_tst = np.zeros((len(tst_df), len(code_cat)))
@@ -111,6 +110,11 @@ other_mat_train = demo_mat_train
 
 X_train = np.concatenate([code_ohe_train, hosp_ohe_train, other_mat_train], axis=1)
 y_train = train_df.readm30.astype(int).values
+n_X = X_train.shape[1]
+
+# delete unnecessary items to save memory
+del(code_mat_train, code_mat_tst, code_ohe_train, code_ohe_tst, hosp_array_train, hosp_array_tst, hosp_ohe_train, hosp_ohe_tst, 
+   other_mat_train, other_mat_tst, demo_mat_train, demo_mat_tst, preprocessed, train_df0, all_df, tst_df, train_df)
     
 # model training and testing
 from xgboost import XGBClassifier
@@ -121,5 +125,5 @@ y_pred = xgb.predict_proba(X_tst)
 fpr, tpr, _ = roc_curve(y_true, y_pred[:, 1])
 roc_auc = auc(fpr, tpr)
 with open(result_file.format(job_index), 'a') as f:
-    f.write('{:.3f}{}{}{}{}{}{:.4f}\n'.format(lr, cohort, tst_seed, n_fold, DX_rarecutpoint, PR_rarecutpoint, roc_auc))
+    f.write('{:.1E},{},{},{},{},{},{},{:.5f}\n'.format(lr, cohort, tst_seed, DX_rarecutpoint, PR_rarecutpoint, n_code_cat, n_X, roc_auc))
     

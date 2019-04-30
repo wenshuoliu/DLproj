@@ -1,0 +1,21 @@
+nyx5135
+nyx5135
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+2019-04-26 16:02:12.470053: F tensorflow/core/platform/cpu_feature_guard.cc:37] The TensorFlow library was compiled to use AVX instructions, but these aren't available on your machine.
+hypertune2.sh: line 6: 17437 Aborted                 (core dumped) python train_template_xgboost0425.py --lr 2e-05 --tst_seed 2 --cohort ami --dx_rarecutpoint 40 --pr_rarecutpoint 40 --result_file output/ht_result0425_{}.csv --job_index 2
+2019-04-26 16:02:18.892353: F tensorflow/core/platform/cpu_feature_guard.cc:37] The TensorFlow library was compiled to use AVX instructions, but these aren't available on your machine.
+hypertune2.sh: line 7: 17486 Aborted                 (core dumped) python train_template_xgboost0425.py --lr 2e-05 --tst_seed 2 --cohort ami --dx_rarecutpoint 20 --pr_rarecutpoint 20 --result_file output/ht_result0425_{}.csv --job_index 2
+2019-04-26 16:02:22.574019: F tensorflow/core/platform/cpu_feature_guard.cc:37] The TensorFlow library was compiled to use AVX instructions, but these aren't available on your machine.
+hypertune2.sh: line 8: 17718 Aborted                 (core dumped) python train_template_xgboost0425.py --lr 2e-05 --tst_seed 2 --cohort chf --dx_rarecutpoint 20 --pr_rarecutpoint 20 --result_file output/ht_result0425_{}.csv --job_index 2
+2019-04-26 16:02:26.706409: F tensorflow/core/platform/cpu_feature_guard.cc:37] The TensorFlow library was compiled to use AVX instructions, but these aren't available on your machine.
+hypertune2.sh: line 9: 17784 Aborted                 (core dumped) python train_template_xgboost0425.py --lr 2e-05 --tst_seed 2 --cohort pna --dx_rarecutpoint 20 --pr_rarecutpoint 20 --result_file output/ht_result0425_{}.csv --job_index 2
+2019-04-26 16:02:31.004841: F tensorflow/core/platform/cpu_feature_guard.cc:37] The TensorFlow library was compiled to use AVX instructions, but these aren't available on your machine.
+hypertune2.sh: line 10: 17817 Aborted                 (core dumped) python train_template_xgboost0425.py --lr 2e-05 --tst_seed 2 --cohort ami --dx_rarecutpoint 10 --pr_rarecutpoint 10 --result_file output/ht_result0425_{}.csv --job_index 2
+2019-04-26 16:02:35.244757: F tensorflow/core/platform/cpu_feature_guard.cc:37] The TensorFlow library was compiled to use AVX instructions, but these aren't available on your machine.
+hypertune2.sh: line 11: 17854 Aborted                 (core dumped) python train_template_xgboost0425.py --lr 2e-05 --tst_seed 1 --cohort chf --dx_rarecutpoint 10 --pr_rarecutpoint 10 --result_file output/ht_result0425_{}.csv --job_index 2
+2019-04-26 16:02:40.976582: F tensorflow/core/platform/cpu_feature_guard.cc:37] The TensorFlow library was compiled to use AVX instructions, but these aren't available on your machine.
+hypertune2.sh: line 12: 17912 Aborted                 (core dumped) python train_template_xgboost0425.py --lr 2e-05 --tst_seed 6 --cohort pna --dx_rarecutpoint 10 --pr_rarecutpoint 10 --result_file output/ht_result0425_{}.csv --job_index 2

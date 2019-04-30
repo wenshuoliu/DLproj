@@ -2,20 +2,21 @@ import numpy as np
 import pandas as pd
 from keras.utils import Sequence, to_categorical
 
-n_DX = 30
-n_PR = 15
-DXs = ['DX'+str(n) for n in range(1, n_DX+1)]
-PRs = ['PR'+str(n) for n in range(1, n_PR+1)]
+n_DX = 39
+n_PR = 20
+DXs = ['DX'+str(n) for n in range(n_DX)]
+PRs = ['PR'+str(n) for n in range(n_PR)]
 
 class DoubleBatchGenerator(Sequence):
     'Generates data from two datasets'
-    def __init__(self, cooccur_df, readm_df, readm_batchsize=512, batchsize_ratio=16, shuffle=True, scaling_factor=0.75, 
-                count_cap=20):
+    def __init__(self, cooccur_df, readm_df, readm_batchsize=512, batchsize_ratio=16, outcome='MOT_1year', shuffle=True, 
+                 scaling_factor=0.75, count_cap=20):
         '''Initialization
         Here coocur_df and readm_df need to have integer index from 0, i.e. they need to reset_index()'''
         self.readm_batchsize = readm_batchsize
         self.cooccur_batchsize = readm_batchsize*batchsize_ratio
         self.batchsize_ratio = batchsize_ratio
+        self.outcome = outcome
         self.cooccur_df = cooccur_df
         self.readm_df = readm_df
         self.shuffle = shuffle
@@ -39,11 +40,11 @@ class DoubleBatchGenerator(Sequence):
 
         DX_mat = self.readm_df.loc[readm_indexes, DXs].values
         PR_mat = self.readm_df.loc[readm_indexes, PRs].values
-        continue_mat = self.readm_df.loc[readm_indexes, ['AGE', 'GENDER', 'LOS']].values
+        continue_mat = self.readm_df.loc[readm_indexes, ['AGE', 'GENDER', 'HOSP_LOS']].values
         eth_array = self.readm_df.loc[readm_indexes, 'Eth'].values
         eth_mat = to_categorical(eth_array, num_classes=5)
         other_mat = np.concatenate((continue_mat, eth_mat), axis=1)
-        y_readm = self.readm_df.loc[readm_indexes, 'MORTALITY_1year'].astype(int).values
+        y_readm = self.readm_df.loc[readm_indexes, self.outcome].astype(int).values
         Y_readm = to_categorical(y_readm, num_classes=2)
 
         focal_id = self.cooccur_df.loc[cooccur_indexes, 'focal_index'].values

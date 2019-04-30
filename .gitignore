@@ -8,4 +8,8 @@ __pycache__/
 */debug.ipynb
 */recycle/
 NRD/Wenyi/hypertune/recycle/
+NRD/hypertune/*.sh
+NRD/hypertuen/*.pbs
+NRD/Wenyi/hypertune/*.sh
+NRD/Wenyi/hypertune/*.pbs
 UC_colonoscopy/plots/

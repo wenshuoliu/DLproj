@@ -1,0 +1,15 @@
+nyx5027
+nyx5027
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+Using TensorFlow backend.
+terminate called after throwing an instance of 'std::bad_alloc'
+  what():  std::bad_alloc
+hypertune5.sh: line 6:  4695 Aborted                 (core dumped) python train_template_xgboost0425.py --lr 2e-05 --tst_seed 5 --cohort pna --dx_rarecutpoint 20 --pr_rarecutpoint 20 --result_file output/ht_result0425_{}.csv --job_index 5
+Using TensorFlow backend.
+2019-04-26 16:01:23.700357: F tensorflow/core/platform/cpu_feature_guard.cc:37] The TensorFlow library was compiled to use AVX instructions, but these aren't available on your machine.
+hypertune5.sh: line 8: 24219 Aborted                 (core dumped) python train_template_xgboost0425.py --lr 2e-05 --tst_seed 2 --cohort pna --dx_rarecutpoint 10 --pr_rarecutpoint 10 --result_file output/ht_result0425_{}.csv --job_index 5
+2019-04-26 16:01:30.000890: F tensorflow/core/platform/cpu_feature_guard.cc:37] The TensorFlow library was compiled to use AVX instructions, but these aren't available on your machine.
+hypertune5.sh: line 9: 24262 Aborted                 (core dumped) python train_template_xgboost0425.py --lr 2e-05 --tst_seed 8 --cohort chf --dx_rarecutpoint 10 --pr_rarecutpoint 10 --result_file output/ht_result0425_{}.csv --job_index 5
