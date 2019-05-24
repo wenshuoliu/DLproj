@@ -9,5 +9,12 @@ qsub batch7.pbs
 qsub batch8.pbs
 qsub batch9.pbs
 qsub batch10.pbs
-#qsub batch11.pbs
-#qsub batch12.pbs
+qsub batch11.pbs
+qsub batch12.pbs
+qsub batch13.pbs
+qsub batch14.pbs
+qsub batch15.pbs
+qsub batch16.pbs
+qsub batch17.pbs
+qsub batch18.pbs
+qsub batch19.pbs

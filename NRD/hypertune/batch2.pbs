@@ -12,7 +12,7 @@
 #PBS -q fluxod
 
 #PBS -V
-#PBS -l nodes=1:ppn=2,pmem=23gb,walltime=48:00:00
+#PBS -l nodes=1:largemem,mem=96gb,walltime=48:00:00
 #PBS -j oe
 
 #### End PBS preamble

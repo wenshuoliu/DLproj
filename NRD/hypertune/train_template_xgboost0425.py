@@ -5,6 +5,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--lr', type=float, default=0.0002)
 parser.add_argument('--cohort', type=str, default='ami')
 parser.add_argument('--tst_seed', type=int, default=0, help='the seed to split training/test data')
+parser.add_argument('--folder', type=str, default='multi_space_glove/')
 parser.add_argument('--result_file', type=str, default='output/result.csv')
 parser.add_argument('--dx_rarecutpoint', type=int, default=10)
 parser.add_argument('--pr_rarecutpoint', type=int, default=10)
@@ -15,6 +16,7 @@ args = parser.parse_args()
 lr = args.lr
 cohort = args.cohort
 tst_seed = args.tst_seed
+folder = args.folder
 result_file = args.result_file
 DX_rarecutpoint = args.dx_rarecutpoint
 PR_rarecutpoint = args.pr_rarecutpoint
@@ -50,7 +52,8 @@ n_PR = 15
 DXs = ['DX'+str(n) for n in range(2, n_DX+2)]
 PRs = ['PR'+str(n) for n in range(1, n_PR+1)]
     
-folder = 'multi_space_glove/'
+#folder = 'multi_space_glove/'
+#folder = 'elder/'
 all_df = pd.read_csv(path+folder+'cohorts10/{}/pred_comorb.csv'.format(cohort), dtype=core_dtypes_pd)
 preprocessed = preprocess(all_df, DX_rarecutpoint=DX_rarecutpoint, PR_rarecutpoint=PR_rarecutpoint)
 all_df = preprocessed['int_df']
@@ -125,5 +128,5 @@ y_pred = xgb.predict_proba(X_tst)
 fpr, tpr, _ = roc_curve(y_true, y_pred[:, 1])
 roc_auc = auc(fpr, tpr)
 with open(result_file.format(job_index), 'a') as f:
-    f.write('{:.1E},{},{},{},{},{},{},{:.5f}\n'.format(lr, cohort, tst_seed, DX_rarecutpoint, PR_rarecutpoint, n_code_cat, n_X, roc_auc))
+    f.write('{:.1E},{},{},{},{},{},{},{},{:.5f}\n'.format(lr, cohort, tst_seed, folder, DX_rarecutpoint, PR_rarecutpoint, n_code_cat, n_X, roc_auc))
     

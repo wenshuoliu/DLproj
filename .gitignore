@@ -8,6 +8,7 @@ __pycache__/
 */debug.ipynb
 */recycle/
 NRD/Wenyi/hypertune/recycle/
+NRD/hypertune/recycle/
 NRD/hypertune/*.sh
 NRD/hypertuen/*.pbs
 NRD/Wenyi/hypertune/*.sh

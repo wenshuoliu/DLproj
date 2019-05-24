@@ -1,1 +1,10 @@
-python train_template_xgboost0425.py --lr 2e-05 --tst_seed 2 --cohort ami --dx_rarecutpoint 40 --pr_rarecutpoint 40 --result_file output/ht_result0425_{}.csv --job_index 0
+python train_template_xgboost0425.py --lr 2e-05 --tst_seed 0 --cohort ami --folder multi_space_glove/ --dx_rarecutpoint 10 --pr_rarecutpoint 10 --result_file output/ht_result0524_{}.csv --job_index 0
+python train_template_xgboost0425.py --lr 2e-05 --tst_seed 1 --cohort ami --folder multi_space_glove/ --dx_rarecutpoint 10 --pr_rarecutpoint 10 --result_file output/ht_result0524_{}.csv --job_index 0
+python train_template_xgboost0425.py --lr 2e-05 --tst_seed 2 --cohort ami --folder multi_space_glove/ --dx_rarecutpoint 10 --pr_rarecutpoint 10 --result_file output/ht_result0524_{}.csv --job_index 0
+python train_template_xgboost0425.py --lr 2e-05 --tst_seed 3 --cohort ami --folder multi_space_glove/ --dx_rarecutpoint 10 --pr_rarecutpoint 10 --result_file output/ht_result0524_{}.csv --job_index 0
+python train_template_xgboost0425.py --lr 2e-05 --tst_seed 4 --cohort ami --folder multi_space_glove/ --dx_rarecutpoint 10 --pr_rarecutpoint 10 --result_file output/ht_result0524_{}.csv --job_index 0
+python train_template_xgboost0425.py --lr 2e-05 --tst_seed 5 --cohort ami --folder multi_space_glove/ --dx_rarecutpoint 10 --pr_rarecutpoint 10 --result_file output/ht_result0524_{}.csv --job_index 0
+python train_template_xgboost0425.py --lr 2e-05 --tst_seed 6 --cohort ami --folder multi_space_glove/ --dx_rarecutpoint 10 --pr_rarecutpoint 10 --result_file output/ht_result0524_{}.csv --job_index 0
+python train_template_xgboost0425.py --lr 2e-05 --tst_seed 7 --cohort ami --folder multi_space_glove/ --dx_rarecutpoint 10 --pr_rarecutpoint 10 --result_file output/ht_result0524_{}.csv --job_index 0
+python train_template_xgboost0425.py --lr 2e-05 --tst_seed 8 --cohort ami --folder multi_space_glove/ --dx_rarecutpoint 10 --pr_rarecutpoint 10 --result_file output/ht_result0524_{}.csv --job_index 0
+python train_template_xgboost0425.py --lr 2e-05 --tst_seed 9 --cohort ami --folder multi_space_glove/ --dx_rarecutpoint 10 --pr_rarecutpoint 10 --result_file output/ht_result0524_{}.csv --job_index 0
